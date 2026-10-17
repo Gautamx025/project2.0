@@ -55,3 +55,11 @@ Implement and verify M2: adapter interfaces + visible fallback, orchestrator/tim
 - Next.js generated frontend/AGENTS.md during dev. Read its local component/layout/search-param guides before further frontend changes.
 - Verified TypeScript, 3 supporting Playwright flows (bulk/history, settings, calculator), plus a strengthened calculator test with 60s/120s stored times: 120 products at 30 min baseline yields 57h and INR 28,500 at INR 500/hour; per-photo basis yields INR 11,400 at INR 100/photo. Backend 23 tests and Compose config still pass.
 - Next: M5 editorial landing, projected impact story, architecture diagram and Under the hood.
+
+## M5 landing and architecture verified
+
+- / now presents asymmetric editorial contact sheets, the 25–40 minute problem, seller groups, six stages, clearly labeled 98%/90%/+15–25% projections, measured impact calculator and the required closing line.
+- /under-the-hood includes inline draw.io-exported SVG with embedded editable source, tool roles, feasibility, scale/storage limits, caching/concurrency optimization and roadmap.
+- Verified production build for all seven routes, valid SVG XML and a Playwright presentation check: six steps, projected labels, required copy, inline diagram and no horizontal body overflow at 390px.
+- Inspected landing desktop/mobile and architecture-mobile screenshots. Design uses warm paper, serif/grotesque/mono typography, ink rules, contact sheets and flat offset shadows. No gradients, neon, floating blobs or default rounded-card hero.
+- Next: M6 provider-contract audit, final polish, exact README/store setup, judge demo, complete requirement coverage, full backend/build/browser run and refreshed screenshots.
