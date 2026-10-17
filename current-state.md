@@ -5,7 +5,8 @@ Last updated: 2026-10-17
 ## Scope and checkpoint
 
 - Built the full local app requested by the user, replacing the imported static mock at `70eab0c`. The original pasted brief remains local; repository requirements are in `instructions.md` and `COVERAGE.md`.
-- M1–M6 are implemented and verified in order, each with a milestone commit. GitHub delivery is being prepared with generated QA artifacts and local-only notes removed from outgoing history; the original local milestone history will remain on a backup branch.
+- M1–M6 are implemented and verified in order, each with a milestone commit. Essential files were pushed to the original GitHub repository's `main` on 2026-10-17; remote commit `7b35336` was independently confirmed with `git ls-remote` after the successful fast-forward push.
+- Delivery retains all six milestones and excludes generated QA artifacts and local-only notes from every outgoing commit. Original unpublished milestone history remains on local branch `local/pre-publish-milestones`; all excluded files remain on disk.
 - All requested screens and provider paths are implemented. The offline production-server flow is verified. Authenticated cloud/store operation is not verified without team credentials.
 - Requirements: [instructions.md](instructions.md). Choices/provenance: [decisions.md](decisions.md). Requirement map: [COVERAGE.md](COVERAGE.md), 44 checked items with explicit verification limits.
 
@@ -36,6 +37,7 @@ Last updated: 2026-10-17
 - Actual CPU rembg live adapter: alpha mask verified, 4.18 s including startup. All three derived sample masks generated and visually inspected. Runtime sample demos require no model download.
 - Final landing, processing, review and 390px screenshots opened and inspected after fixes. `docs/screenshots` and `docs/visual-qa.md` remain local, ignored QA artifacts; browser tests regenerate screenshots.
 - `docker compose config --quiet`, `pip check`, env-lint and Git whitespace checks passed. No missing/extra environment keys; unused secrets are intentionally empty.
+- GitHub delivery: 79 tracked files; 151 unique outgoing file versions scanned for credential signatures and excluded paths before push. Final tracked runtime tree was unchanged by history cleanup. Delivery changes touched only documentation and ignore rules; application tests were not rerun for those edits.
 - Browser test servers were shut down by Playwright after verification. No app is claimed to be currently serving. Start it using README's two-terminal commands.
 
 ## Limits and next action
@@ -43,4 +45,4 @@ Last updated: 2026-10-17
 - Docker engine was unavailable, so container image/broker execution was not tested. Manual production servers are the verified run path; queue fallback/races have tests.
 - No authenticated cloud model/search request or real store write was made. Live media import requires public HTTPS; inspect any partial/uncertain store result before retrying.
 - General demo-image isolation remains approximate; sample masks are precomputed. Physical phone capture, full screen-reader/cross-browser testing and multi-tenant production operation remain outside verified scope.
-- Current delivery action: verify and push the essential project files to the existing GitHub `main`, preserving the milestone sequence. No hosted deployment is requested. After delivery, use README to run the judges' demo; authenticated development-store/provider smoke tests remain the next external verification step.
+- Next action: clone/pull `Gautamx025/project2.0` and use README to run the judges' demo. Authenticated development-store/provider smoke tests remain the next external verification step. GitHub source delivery is complete; no hosted deployment was requested or performed.
