@@ -2,6 +2,8 @@ import type { NextConfig } from "next";
 const config: NextConfig = {
   devIndicators: false,
   async rewrites() {
+    // Vercel Services routes API/media before requests enter the web service.
+    if (process.env.VERCEL) return [];
     return [
       {
         source: "/api/:path*",

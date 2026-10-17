@@ -58,11 +58,29 @@ No confirmed blocking defects remain in the verified offline workflow. External-
 
 ## Remaining limitations and verification boundaries
 
+### I-009: Vercel picked the full local Python dependency set
+- Status: resolved, 2026-10-17.
+- Impact: the first Python bundle was 518.38 MB, above Vercel's 500 MB function limit; an indirect requirements include also failed the cloud parser.
+- Resolution: root `server.py` entrypoint and self-contained pinned root `requirements.txt` containing the lean cloud runtime. Local rembg and its model dependencies remain in the separate full local install.
+- Evidence: Vercel built Python 3.12 and the complete Services deployment reached READY; the online six-stage demo passed.
+
+### I-010: Python's sample assets were not traced into the cloud bundle
+- Status: resolved, 2026-10-17.
+- Impact: the initial ready deployment served pages/health but `/api/jobs/sample` returned 503 because its sample file was absent.
+- Resolution: explicitly include `frontend/public/samples/**` in the Python function configuration.
+- Evidence: redeployment reached READY; online sample ingestion, mask isolation, four variants, editable result and approved demo receipt passed. Private media returns 200 only for its owning browser workspace.
+
+### I-011: Automatic GitHub deployment linking is not configured
+- Status: open; non-blocking hosting configuration.
+- Impact/evidence: Vercel CLI could not link `Gautamx025/project2.0` because the Vercel account lacks a GitHub login connection. CLI source uploads build/deploy successfully.
+- Workaround: use `vercel deploy --prod` from the linked checkout.
+- Next action: the account owner can add the GitHub login connection/repository access in Vercel, then link the repository if automatic Git-triggered builds are wanted. No connection or repository permissions were changed silently.
+
 - Real cloud/model/search/store credentials were not supplied. HTTP contracts have tests and official source references, but account access, latency and quality need authenticated smoke tests.
 - Docker Desktop's Linux engine was unavailable. Compose syntax/configuration passed; no full container build or real Redis broker run was claimed. BackgroundTasks runs end to end; Redis fallback and fast-worker races are tested.
 - General demo uploads use an edge-color isolation heuristic and generic editable copy when live providers are unavailable. Complex backgrounds may remain. Bundled sample masks were prepared with actual CPU rembg and are explicitly precomputed demo data.
 - Search-snippet price relevance and generated product fidelity need merchant review. Core WooCommerce has no portable SEO-plugin schema; SEO fields are retained as metadata for later plugin mapping.
 - Store creates are not blindly retried. A request timeout may have made a partial draft; receipts retain known IDs or flag uncertainty. Local approved repeats do not create duplicates.
-- Persistence is a shared local filesystem for a trusted single-merchant hackathon. Multi-host/multi-tenant operation needs a shared database/object store and authentication. A process crash may require inspection of a stale write-lock file.
+- Local persistence is a shared filesystem for a trusted operator; a local process crash may require inspection of a stale write-lock file. The hosted demo now has scoped Redis records and private Blob media, signed anonymous browser workspaces and expiring distributed locks. Production merchant accounts still require authentication and an explicit public/signed store media-import strategy. Cloud processing is bounded to the 300-second function window and can be retried after interruption; its local price-search cache is best-effort per instance.
 - Physical mobile camera capture, a complete screen-reader audit and non-Chromium device coverage were not exercised. Automated AA checks do not replace those checks.
-- Starlette emits a TestClient/httpx deprecation warning; all 29 backend tests pass. Browser screenshot replacement retries transient Windows thumbnail/indexer locks without rerunning app actions.
+- All 33 current backend tests pass. Browser screenshot replacement retries transient Windows thumbnail/indexer locks without rerunning app actions.

@@ -4,6 +4,33 @@
 
 A phone photo becomes a reviewable product draft: four image settings, editable English/Hindi/Marathi copy, comparable INR prices and an approved draft-store sync. The app measures its actual stages. The 30-second mark is a goal, not a fabricated result.
 
+## Vercel deployment
+
+Live demo: **https://snap-2-store.vercel.app**. Uploads, all six processing stages, private media/history, saved edits and an approved demo draft have been verified on the hosted services. Live AI and store credentials are not configured.
+
+The deployment configuration runs Next.js and FastAPI together using Vercel Services. `vercel.json` routes `/api/*` and `/media/*` to Python and all other paths to Next.js. `server.py` selects the pinned, lean Python runtime in root `requirements.txt`; the full local environment retains CPU rembg in `backend/requirements.lock.txt`. Sample photos and their masks are explicitly included in the Python function.
+
+The hosted demo uses a free managed Upstash Redis store for records and distributed locks, plus a private Vercel Blob store for original/processed photos. Browser workspaces are isolated by a signed, secure, HTTP-only cookie. Clearing that cookie or using another browser starts a separate ledger; this is anonymous workspace isolation, not account authentication. Media reads verify workspace ownership before serving an image. Unique image paths on retries avoid stale Blob/CDN reads.
+
+For a new deployment, link the project, provision/connect a **private** Blob store and **free** Upstash Redis integration, and set the deployment-only variables listed in `.env.cloud.example`. Leave automatic paid database upgrades disabled. Vercel/Upstash may require the account owner to accept marketplace terms. Set `CLOUD_MODE=true`, `DEMO_MODE=true`, and a cryptographically random `SESSION_SECRET` in the Vercel project environment for Production and Preview. The connected stores supply their own credentials. Keep all real values out of source control and browser bundles.
+
+```sh
+vercel link
+vercel deploy --prod
+```
+
+Hosted integration settings are read-only and managed through Vercel environment settings; the shared demo does not accept visitors' API/store credentials. The demo makes no real store writes. For a private live merchant installation, add authentication and an explicit public/signed media-import strategy before enabling store credentials: anonymous private-workspace image URLs require the browser cookie, which a store importer cannot supply.
+
+Large picker/camera photos are reduced before upload so up to three files fit the request limit. Cloud processing uses FastAPI background tasks within a 300-second function window; timed-out records become retryable. This is bounded request-based processing, not a continuously running RQ worker. Local/Docker Redis+RQ operation remains available for heavier processing. Cloud price-search caching is best-effort per instance; durable job records and media use the connected stores.
+
+Verify an already deployed **demo** with:
+
+```powershell
+.venv\Scripts\python -m backend.scripts.smoke_cloud https://your-app.vercel.app
+```
+
+This refuses non-demo mode and checks all seven pages, six-stage sample processing, private media/history, saved edits, explicit approved demo drafts, idempotency and a returning visitor. It creates only an isolated sample listing and no live store product. Git-triggered deployments additionally require the Vercel account's GitHub login connection and repository access; CLI deployments work independently of that connection.
+
 ## Quick start — Windows PowerShell
 
 Prerequisites: Node.js 24 (20.9+ supported by Next.js), Python 3.11–3.13, and npm. Python 3.11 and Node 24 were used here. No Redis, GPU, provider keys or store account is needed for the offline demo.
@@ -140,7 +167,7 @@ On Linux RQ uses worker processes; Windows uses SimpleWorker for local developme
 1. Use the [Shopify Dev Dashboard development-store workflow](https://shopify.dev/docs/apps/build/stores/development-stores) to create a development/test store; it is for development, not live merchant selling.
 2. Set its currency to **INR**. Create/install an app for that store and grant Admin API product read/write permissions, including `write_products`, through Shopify's current app setup. Keep its Admin API access token private.
 3. In Settings, enter `your-shop.myshopify.com` and the token. `SHOPIFY_API_VERSION` defaults to `2026-07` and can be updated to another supported stable version.
-4. Host the app/media on public HTTPS and set `PUBLIC_BASE_URL`. Shopify must fetch the generated image; localhost cannot work for live image import. There is no public deployment included in this repository.
+4. Host store-accessible media on public HTTPS and set `PUBLIC_BASE_URL`. Shopify must fetch the generated image; localhost cannot work for live image import. The public Vercel demo uses private browser-scoped media, so a live store installation needs an explicit media-import strategy.
 5. Turn demo mode off, save, and **test connection**. A successful test checks the shop and INR currency, not a product write.
 6. Generate and review a listing, save edits, approve **Shopify**, and inspect the returned Admin product link. The adapter calls `productCreate(status: DRAFT)`, then `productVariantsBulkUpdate` for the final price/SKU. It never calls a storefront publication mutation. If variant update fails, the receipt retains the created product ID and tells you to correct that draft rather than duplicate it.
 
@@ -172,7 +199,7 @@ On macOS/Linux use `.venv/bin/python` and `PLAYWRIGHT_PRODUCTION=true npm run te
 
 Browser tests generate screenshots locally in ignored `docs/screenshots/`. Tests cover edits reaching exact JSON/store payloads, approval and stale revision checks, reset/cancellation, retries, invalid input, bulk/history, settings, language switching, keyboard comparison, deterministic calculator math and mobile overflow. [COVERAGE.md](COVERAGE.md) maps requirements to implementation and verification. [docs/demo-script.md](docs/demo-script.md) is the two-minute judges' walkthrough.
 
-### Observed final results — 17 October 2026
+### Observed local M1–M6 results — 17 October 2026
 
 - Backend: 29 pytest tests passed.
 - Frontend: production build and TypeScript passed for all 7 routes.
@@ -180,6 +207,8 @@ Browser tests generate screenshots locally in ignored `docs/screenshots/`. Tests
 - Local rembg: actual CPU alpha-mask operation passed; sample derivatives generated and inspected.
 - Compose configuration, environment-key audit, dependency consistency and whitespace checks passed. Docker engine execution and authenticated cloud/store calls remain unverified.
 - All four required screenshot categories were refreshed and opened for visual QA. The 44-item coverage checklist has no unchecked implementation items and states its external verification boundary explicitly.
+
+The subsequent Vercel checkpoint passed **33 backend tests**, the existing **11 production-frontend browser checks** and a separate new large-photo check. Local/remote production builds and TypeScript passed. The live cloud smoke check passed, and an actual file uploaded through the hosted browser completed all six stages. Automatic GitHub-triggered deployments still need the Vercel account's GitHub login connection; the current production deployment was made through the CLI.
 
 ## Known limitations
 
@@ -189,7 +218,7 @@ Browser tests generate screenshots locally in ignored `docs/screenshots/`. Tests
 - Search snippets are a noisy source of prices. Only explicit INR values are accepted, but relevance/discount interpretation still needs merchant review; sparse results fall back visibly.
 - Shopify can import media asynchronously. A created draft is not a guarantee that every image has finished processing; check its Admin page. Woo SEO plugin integration is not portable.
 - Store creation is not blindly retried because a timeout can still have created a draft. Local duplicate approval is idempotent. Receipts flag uncertain/partial writes and retain known draft IDs.
-- Shared JSON/filesystem persistence fits a trusted single-merchant hackathon deployment. Multi-host production needs shared database/object storage, tenant isolation, authentication, access control and operational monitoring. A process crash can require inspecting a stale `.lock` before retrying a write.
+- Local JSON/filesystem persistence fits a trusted single-merchant hackathon deployment. The Vercel demo uses scoped Redis records/private Blob media and expiring distributed locks. A production merchant service still needs account authentication, access control and operational monitoring. A local process crash can require inspecting a stale `.lock` before retrying a write.
 - Offline demo timing, the 98%/90%/+15–25% impact projections and modeled calculator savings are not evidence of live performance or conversion lift.
 - Docker Compose configuration is validated; its engine/image build was unavailable in this environment. Manual production servers and browser flow are the verified run path.
 

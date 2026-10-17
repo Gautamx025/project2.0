@@ -1,24 +1,24 @@
 import asyncio
 import json
 import hashlib
+import os
 import time
 from contextlib import asynccontextmanager
 from pathlib import Path
 from fastapi import BackgroundTasks, FastAPI, File, Form, HTTPException, Request, UploadFile
-from fastapi.responses import StreamingResponse
-from fastapi.staticfiles import StaticFiles
+from fastapi.responses import StreamingResponse, FileResponse
 from .adapters import Store, close_clients, store_payload
-from .config import ROOT, public_settings, save_settings, settings
+from .config import ROOT, cloud_mode, public_settings, save_settings, settings
 from .imaging import MAX_BYTES, normalize_image
 from .models import ConnectionRequest, EditRequest, Language, PublishRequest, RetryRequest, SampleRequest, SettingsRequest, Style
 from .pipeline import STAGES, new_job
 from .queueing import enqueue
-from .repository import Repository
+from .repository import create_repository
 
 @asynccontextmanager
 async def lifespan(app):
     # Local BackgroundTasks cannot survive an API restart; make interrupted work retryable.
-    for job in repository.all():
+    for job in ([] if cloud_mode() else repository.all()):
         if job['queue'] == 'background' and job['status'] in {'queued', 'processing'}:
             job.update(status='failed', error='The local server restarted. Retry the earliest unfinished stage.')
             for stage in job['stages']:
@@ -29,12 +29,30 @@ async def lifespan(app):
     await close_clients()
 
 app = FastAPI(title='Snap-2-Store', version='1.0.0', lifespan=lifespan)
-repository = Repository(settings().data_dir)
-app.mount('/media', StaticFiles(directory=repository.media), name='media')
+repository = create_repository(settings().data_dir)
+from .cloud import VisitorWorkspace
+app.add_middleware(VisitorWorkspace)
+
+@app.get('/media/{name}')
+def media(name: str):
+    return FileResponse(repository.load_media(name), headers={'Cache-Control': 'private, no-store'})
 
 def get_job(job_id: str) -> dict:
     try:
-        return repository.get(job_id)
+        job = repository.get(job_id)
+        # A killed serverless invocation cannot run a finally block. Make its
+        # durable record retryable after the maximum cloud execution window.
+        if cloud_mode() and job['status'] in {'queued', 'processing'} and time.time()-job['updated_at'] > 360:
+            with repository.lock(job_id):
+                job = repository.get(job_id)
+                if job['status'] in {'queued', 'processing'} and time.time()-job['updated_at'] > 360:
+                    job.update(status='failed', error='The hosted processing window ended. Retry the earliest unfinished stage.')
+                    for stage in job['stages']:
+                        if stage['status'] != 'completed':
+                            stage.update(status='failed', reason=job['error'])
+                            break
+                    repository.save(job)
+        return job
     except FileNotFoundError:
         raise HTTPException(404, 'Listing not found. It may belong to a different local workspace.')
 
@@ -51,7 +69,7 @@ async def missing_record(request: Request, exc: FileNotFoundError):
 @app.get('/api/health')
 def health():
     config = settings()
-    return {'status': 'ok', 'demo_mode': config.demo, 'queue': 'redis' if config.redis_url else 'background', 'storage': 'shared-filesystem'}
+    return {'status': 'ok', 'demo_mode': config.demo, 'queue': 'cloud-function' if cloud_mode() else 'redis' if config.redis_url else 'background', 'storage': 'private-blob-and-redis' if cloud_mode() else 'shared-filesystem'}
 
 @app.get('/api/settings')
 def read_settings():
@@ -86,6 +104,7 @@ async def create_job(contents: list[bytes], key: str, style: str, language: str,
     for index, image in enumerate(images):
         name = f'{job["id"]}-raw-{index}.jpg'
         await asyncio.to_thread(image.save, repository.media/name, quality=90)
+        await asyncio.to_thread(repository.store_media, repository.media/name)
         job['source_images'].append('/media/'+name)
     repository.save(job)
     enqueue(job, background, repository)
@@ -102,6 +121,9 @@ async def upload_job(background: BackgroundTasks, files: list[UploadFile] = File
         data = await file.read(MAX_BYTES+1)
         await file.close()
         contents.append(data)
+    request_limit = int(os.getenv('MAX_UPLOAD_REQUEST_BYTES', '4000000' if cloud_mode() else '31457280'))
+    if sum(map(len, contents)) > request_limit:
+        raise HTTPException(413, 'These photos exceed the upload limit. Use the photo picker to prepare smaller images.')
     return await create_job(contents, 'custom', style, language, background)
 
 @app.post('/api/jobs/sample', status_code=202)
@@ -132,7 +154,7 @@ async def events(job_id: str, request: Request):
             if job['status'] in {'ready', 'published', 'failed', 'cancelled'}:
                 break
             yield ': keep-alive\n\n'
-            await asyncio.sleep(.15)
+            await asyncio.sleep(1 if cloud_mode() else .15)
     return StreamingResponse(stream(), media_type='text/event-stream', headers={'Cache-Control': 'no-cache, no-transform', 'X-Accel-Buffering': 'no'})
 
 @app.delete('/api/jobs/{job_id}')

@@ -26,6 +26,7 @@ export default defineConfig({
       timeout: 60000,
       env: {
         DEMO_MODE: "true",
+        MAX_UPLOAD_REQUEST_BYTES: "4000000",
         REDIS_URL: "",
         DATA_DIR: path.join(process.cwd(), "data/e2e"),
         SETTINGS_ENV_FILE: path.join(process.cwd(), "data/e2e-config/.env"),

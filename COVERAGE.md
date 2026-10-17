@@ -64,3 +64,15 @@ Checked means the requirement has a concrete implementation and the cited verifi
 ## External verification boundary
 
 No paid/authenticated model request or real store write was made. Current provider APIs are implemented from official contracts, validated against typed responses and mocked HTTP tests, and fall back visibly when unavailable. Account access, provider latency/quality, public image ingestion and production infrastructure require a credentialed smoke test before a real merchant rollout. These limits are explicit in the UI/docs rather than hidden behind checked boxes.
+
+## Vercel deployment checkpoint — 17 October 2026
+
+- [x] One Services deployment routes Next.js and FastAPI on the same origin; production READY at https://snap-2-store.vercel.app.
+- [x] Lean Python 3.12 runtime fits the function bundle; sample photos/masks are explicitly packaged.
+- [x] Free managed Redis records and distributed locks, private immutable Blob media, signed visitor workspace isolation and read-only cloud integration settings — four cloud regression tests plus the live smoke check.
+- [x] Large-photo preparation is verified against an enforced transport limit: the original >4.5 MB PNG receives 413, and the same file succeeds through the photo picker and all six stages.
+- [x] Current checks: 33 backend tests, 12 production-frontend browser checks (11 existing + the focused large-photo check), local/remote production build and TypeScript.
+- [x] Live cloud sample processing, private media and stranger rejection, exact edited payload, explicit approved demo draft, idempotency and returning-visitor persistence — `backend/scripts/smoke_cloud.py`.
+- [ ] Automatic GitHub-triggered deployments — optional account login connection is missing; manual CLI production deployment is verified (I-011).
+
+Hosted provider/store behavior remains labeled demo. Cloud records/media are durable, while its local search cache is best-effort. Anonymous browser cookies isolate visitors; production merchant account authentication and store-accessible media remain separate work before enabling live store credentials.

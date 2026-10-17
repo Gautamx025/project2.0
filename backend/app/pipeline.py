@@ -5,7 +5,7 @@ from pathlib import Path
 from .adapters import Background, Price, Segmentation, Vision, execute
 from .config import settings
 from .models import ListingCopy
-from .repository import Repository
+from .repository import create_repository
 
 STAGES = [
     ('ingestion', 'Photo ingestion', 'Validate your photos and prepare a clean working image.'),
@@ -28,7 +28,7 @@ class Cancelled(Exception):
 
 async def run_job(job_id: str, start_stage: int = 0):
     config = settings()
-    repository = Repository(config.data_dir)
+    repository = create_repository(config.data_dir)
     job = repository.get(job_id)
     if job['status'] == 'cancelled':
         return
@@ -47,7 +47,7 @@ async def run_job(job_id: str, start_stage: int = 0):
     def check_cancelled():
         if repository.get(job_id)['status'] == 'cancelled':
             raise Cancelled()
-    sources = [repository.media / Path(url).name for url in job['source_images']]
+    sources = [await asyncio.to_thread(repository.load_media, Path(url).name) for url in job['source_images']]
     artifacts = job['artifacts']
     for index in range(start_stage, len(STAGES)):
         stage = job['stages'][index]
@@ -64,11 +64,15 @@ async def run_job(job_id: str, start_stage: int = 0):
                 for source in sources:
                     await asyncio.to_thread(normalize_image, source.read_bytes())
             elif index == 1:
-                outcome = await execute(Segmentation(config.segmentation, job['sample_key']), config, sources[0], repository.media / f'{job_id}-cutout.png', on_retry=retry)
+                outcome = await execute(Segmentation(config.segmentation, job['sample_key']), config, sources[0], repository.media / f'{job_id}-cutout-{uuid.uuid4().hex}.png', on_retry=retry)
                 artifacts['cutout'] = outcome.value
+                await asyncio.to_thread(repository.store_media, Path(outcome.value))
             elif index == 2:
                 async def variant(style):
-                    return style, await execute(Background(config.background), config, Path(artifacts['cutout']), repository.media / f'{job_id}-{style}.png', style)
+                    cutout = await asyncio.to_thread(repository.load_media, Path(artifacts['cutout']).name)
+                    result = await execute(Background(config.background), config, cutout, repository.media / f'{job_id}-{style}-{uuid.uuid4().hex}.png', style)
+                    await asyncio.to_thread(repository.store_media, Path(result.value))
+                    return style, result
                 results = await asyncio.gather(*(variant(style) for style in ('studio', 'shadow', 'lifestyle', 'color')))
                 artifacts['variants'] = {style: '/media/'+Path(result.value).name for style, result in results}
                 artifacts['variant_provenance'] = {style: {'demo': result.demo, 'reason': result.reason, 'provider': result.provider} for style, result in results}

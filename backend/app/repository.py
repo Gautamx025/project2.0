@@ -48,6 +48,17 @@ class Repository:
                 continue
         return sorted(records, key=lambda job: job['created_at'], reverse=True)[:200]
 
+    def store_media(self, path: Path) -> None:
+        pass  # Local files are already durable in the configured data directory.
+
+    def load_media(self, name: str) -> Path:
+        if Path(name).name != name or name.startswith('.'):
+            raise FileNotFoundError(name)
+        path = self.media / name
+        if not path.is_file():
+            raise FileNotFoundError(name)
+        return path
+
     @contextmanager
     def lock(self, job_id: str):
         path = self.path(job_id).with_suffix('.lock')
@@ -60,3 +71,11 @@ class Repository:
             yield
         finally:
             path.unlink(missing_ok=True)
+
+
+def create_repository(root: Path):
+    from .config import cloud_mode
+    if cloud_mode():
+        from .cloud import CloudRepository
+        return CloudRepository(root)
+    return Repository(root)

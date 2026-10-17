@@ -7,6 +7,9 @@ from dotenv import load_dotenv, set_key
 ROOT = Path(__file__).resolve().parents[2]
 ENV_FILE = Path(os.getenv('SETTINGS_ENV_FILE') or ROOT / '.env')
 
+def cloud_mode() -> bool:
+    return os.getenv('CLOUD_MODE', '').lower() == 'true'
+
 @dataclass(frozen=True)
 class Settings:
     demo: bool
@@ -24,7 +27,7 @@ def settings() -> Settings:
     load_dotenv(ENV_FILE, override=True)
     return Settings(
         os.getenv('DEMO_MODE', 'true').lower() == 'true',
-        Path(os.getenv('DATA_DIR', str(ROOT / 'data'))).resolve(),
+        Path(os.getenv('DATA_DIR') or ('/tmp/snap2store' if cloud_mode() else str(ROOT / 'data'))).resolve(),
         os.getenv('PUBLIC_BASE_URL', 'http://localhost:3000').rstrip('/'),
         os.getenv('REDIS_URL', ''), os.getenv('SEGMENTATION_PROVIDER', 'fal'),
         os.getenv('BACKGROUND_PROVIDER', 'fal'), os.getenv('VISION_PROVIDER', 'gemini'),
@@ -41,9 +44,12 @@ def public_settings() -> dict:
             'demo_mode': config.demo, 'vision_provider': config.vision, 'price_provider': config.price,
             'segmentation_provider': config.segmentation, 'background_provider': config.background,
             'gemini_model': os.getenv('GEMINI_MODEL') or 'gemini-3.8-flash',
+            'settings_readonly': cloud_mode(),
             'configured': {name: bool(os.getenv(name.upper())) for name in SECRET_FIELDS}}
 
 def save_settings(values: dict) -> dict:
+    if cloud_mode():
+        raise RuntimeError('Hosted integration settings are managed in the Vercel project environment. This shared demo does not accept credentials.')
     ENV_FILE.parent.mkdir(parents=True, exist_ok=True)
     ENV_FILE.touch(exist_ok=True)
     for name, value in values.items():

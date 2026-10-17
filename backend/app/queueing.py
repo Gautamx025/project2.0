@@ -1,6 +1,6 @@
 from typing import Protocol
 from fastapi import BackgroundTasks
-from .config import settings
+from .config import cloud_mode, settings
 from .repository import Repository
 
 class JobQueue(Protocol):
@@ -25,6 +25,11 @@ class RedisQueue:
 
 def enqueue(job: dict, background: BackgroundTasks, repository: Repository, start_stage: int = 0):
     config = settings()
+    if cloud_mode():
+        job['queue'] = 'cloud-function'
+        repository.save(job)
+        BackgroundQueue().submit(job['id'], background, start_stage)
+        return
     if config.redis_url:
         try:
             queue = RedisQueue(config.redis_url)

@@ -10,3 +10,4 @@ rq>=2,<3
 pytest>=8,<10
 pytest-asyncio>=0.25,<2
 rembg[cpu]>=2.0.60,<3
+vercel-blob==0.5.0

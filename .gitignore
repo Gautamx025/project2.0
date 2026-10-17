@@ -7,6 +7,7 @@ __pycache__/
 .env
 .env.*
 !.env.example
+!.env.cloud.example
 data/
 test-results/
 playwright-report/
@@ -18,3 +19,6 @@ BUILD-BRIEF.md
 frontend/AGENTS.md
 docs/screenshots/
 docs/visual-qa.md
+.vercel/
+.agents/
+skills-lock.json

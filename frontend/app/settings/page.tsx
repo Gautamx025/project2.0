@@ -73,7 +73,7 @@ export default function Settings() {
     }
   }
   async function test(channel: Channel) {
-    const saved = await save();
+    const saved = settings?.settings_readonly ? settings : await save();
     if (!saved) return;
     setBusy(true);
     try {
@@ -106,6 +106,7 @@ export default function Settings() {
         type={secret ? "password" : "text"}
         autoComplete="off"
         spellCheck={false}
+        disabled={settings?.settings_readonly}
         value={String(values[name] || "")}
         placeholder={
           secret
@@ -135,7 +136,7 @@ export default function Settings() {
             <br />
             Connect your store when you’re ready.
           </p>
-          <span className="badge">SECRETS SAVED SERVER-SIDE IN .ENV</span>
+          <span className="badge">{settings?.settings_readonly ? "HOSTED DEMO / MANAGED SETTINGS" : "SECRETS SAVED SERVER-SIDE IN .ENV"}</span>
         </div>
       </div>
       {error && (
@@ -165,6 +166,7 @@ export default function Settings() {
         </div>
       ) : (
         <form className="settings-form" onSubmit={save}>
+          {settings.settings_readonly && <p className="message" role="status">This hosted demo keeps your listings in a private browser workspace. Integration settings are managed by the deployment owner. Please do not enter store or API credentials here.</p>}
           <section className="mode-sheet">
             <div>
               <p className="eyebrow">THE REHEARSAL SWITCH</p>
@@ -183,6 +185,7 @@ export default function Settings() {
               <input
                 type="checkbox"
                 checked={Boolean(values.demo_mode)}
+                disabled={settings.settings_readonly}
                 onChange={(event) => set("demo_mode", event.target.checked)}
               />
               <span>Demo mode {values.demo_mode ? "on" : "off"}</span>
@@ -209,7 +212,7 @@ export default function Settings() {
                 onClick={() => test("shopify")}
                 disabled={busy}
               >
-                Save & test Shopify connection ↗
+                {settings.settings_readonly ? "Test demo Shopify connection ↗" : "Save & test Shopify connection ↗"}
               </button>
               {tests.shopify && (
                 <p
@@ -244,7 +247,7 @@ export default function Settings() {
                 onClick={() => test("woocommerce")}
                 disabled={busy}
               >
-                Save & test WooCommerce connection ↗
+                {settings.settings_readonly ? "Test demo WooCommerce connection ↗" : "Save & test WooCommerce connection ↗"}
               </button>
               {tests.woocommerce && (
                 <p
@@ -265,14 +268,15 @@ export default function Settings() {
               <p className="eyebrow">IMAGE, COPY & RESEARCH</p>
               <h2>Choose your working tools.</h2>
               <p>
-                Credentials are sent to your own FastAPI backend and written to
+                {settings.settings_readonly ? "Live integrations are managed through the deployment environment. The shared demo does not accept account credentials." : <>Credentials are sent to your own FastAPI backend and written to
                 its ignored .env. The app never returns stored secret values.
-                This hackathon build is for a trusted local operator.
+                This hackathon build is for a trusted local operator.</>}
               </p>
             </div>
             <div className="provider-fields">
               <label htmlFor="vision-provider">Vision provider</label>
               <select
+                disabled={settings.settings_readonly}
                 id="vision-provider"
                 value={String(values.vision_provider)}
                 onChange={(event) => set("vision_provider", event.target.value)}
@@ -292,6 +296,7 @@ export default function Settings() {
                 Foreground isolation
               </label>
               <select
+                disabled={settings.settings_readonly}
                 id="segmentation-provider"
                 value={String(values.segmentation_provider)}
                 onChange={(event) =>
@@ -304,6 +309,7 @@ export default function Settings() {
               </select>
               <label htmlFor="background-provider">Background provider</label>
               <select
+                disabled={settings.settings_readonly}
                 id="background-provider"
                 value={String(values.background_provider)}
                 onChange={(event) =>
@@ -317,6 +323,7 @@ export default function Settings() {
               {field("replicate_api_token", "Replicate API token", true)}
               <label htmlFor="price-provider">Price search</label>
               <select
+                disabled={settings.settings_readonly}
                 id="price-provider"
                 value={String(values.price_provider)}
                 onChange={(event) => set("price_provider", event.target.value)}
@@ -327,15 +334,15 @@ export default function Settings() {
               {field("tavily_api_key", "Tavily API key", true)}
               {field("serpapi_api_key", "SerpAPI API key", true)}
               <p className="caption">
-                Gemini 1.5 Flash has retired. Select a model available to your
+                {settings.settings_readonly ? "This instance runs in demo mode. The deployment owner manages integrations through Vercel environment settings." : <>Gemini 1.5 Flash has retired. Select a model available to your
                 account. Additional model IDs, public media URL and timeouts are
-                configured in .env; see the README.
+                configured in .env; see the README.</>}
               </p>
             </div>
           </section>
           <div className="save-settings">
             <p>Save provider changes before starting a new job or batch.</p>
-            <button className="button accent" type="submit" disabled={busy}>
+            <button className="button accent" type="submit" disabled={busy || settings.settings_readonly}>
               {busy ? "Saving or testing…" : "Save settings"} <span>↓</span>
             </button>
           </div>

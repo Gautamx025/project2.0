@@ -77,3 +77,23 @@ No superseded decisions recorded. Existing technology choices are observed imple
 - Reason: A clean clone should have everything needed to run, test and maintain the app without bulky generated outputs or personal session material.
 - Alternatives: Deleting generated files only in a final commit would still upload them in earlier Git history. Squashing everything would discard the requested milestone sequence.
 - Consequences: The unpublished milestone commits receive new hashes while retaining their sequence, messages and authorship. The existing remote baseline is preserved and delivery uses a normal fast-forward push, never force push. No runtime implementation changes are needed.
+
+### D-008: Follow Vercel's global agent setup before project deployment
+
+- Date: 2026-10-17
+- Status: accepted
+- Source: User explicitly asks to fetch and follow `https://vercel.com/get-started.md`.
+- Decision: Install the Vercel CLI globally and the official plugin for Codex only in user scope; configure the shared `https://mcp.vercel.com` server in user-wide Codex settings, authenticate through the browser and retain confirmation for MCP writes. Do not install duplicate standalone skills or create/link a project during global onboarding.
+- Reason: The requested guide distinguishes account/agent preparation from project-specific deployment and requires separate CLI and MCP authentication.
+- Alternatives: A project-scoped installation would need repetition across projects; creating a Vercel project now would skip the guide's explicit onboarding boundary.
+- Consequences: Credentials and account configuration stay outside this repository. Codex may need a reload to discover newly installed commands/tools. Deploying the complete current app still requires durable backend storage and job execution, while the existing frontend already supports an external backend through `BACKEND_URL`.
+
+### D-009: Deploy the complete demo on Vercel with durable cloud state
+
+- Date: 2026-10-17
+- Status: accepted
+- Source: User explicitly requests deployment on Vercel; platform implementation choices are within that scope.
+- Decision: Use Vercel Services for the existing Next.js/FastAPI pair, free managed Upstash Redis for cloud jobs/distributed locks, and private Blob storage for immutable media. Disable automatic paid database upgrades. Keep the local filesystem/Redis/manual/Docker paths available. Begin with labeled demo providers, isolate cloud visitor histories using signed browser workspaces, and manage cloud credentials through deployment environment variables instead of a writable public settings file.
+- Reason: A frontend-only deploy would leave uploads/processing/history broken. Vercel's ephemeral filesystem cannot provide the current persistence contract.
+- Alternatives: Hosting FastAPI on another provider would add an external account dependency; temporary-only files would lose listings across cloud instances.
+- Consequences: Cloud runtime dependencies must fit Vercel's function bundle and 300-second execution limit. The Python Blob SDK cannot provide cache-bypassed mutable reads, so Redis holds mutable records while Blob media uses unique immutable names, including on retries. Verify the deployed workflow, persistence across clients/instances and private media access. Large local rembg model dependencies remain in the local install; cloud missing-key paths retain explicit demo fallbacks. Browser uploads are reduced when needed to keep up to three photos below the platform request limit.

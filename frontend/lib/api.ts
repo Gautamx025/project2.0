@@ -80,6 +80,7 @@ export type Job = {
   } | null;
 };
 export type AppSettings = {
+  settings_readonly?: boolean;
   demo_mode: boolean;
   vision_provider: string;
   price_provider: string;
@@ -91,6 +92,15 @@ export type AppSettings = {
   configured: Record<string, boolean>;
 };
 export async function api<T>(path: string, init?: RequestInit): Promise<T> {
+  if (init?.body instanceof FormData) {
+    // Keep multi-photo uploads below the cloud request limit; small fixtures
+    // retain their original bytes and content-hash recognition.
+    const prepared = new FormData();
+    for (const [key, value] of init.body.entries()) {
+      prepared.append(key, value instanceof File ? await uploadPhoto(value) : value);
+    }
+    init = { ...init, body: prepared };
+  }
   const response = await fetch("/api" + path, {
     ...init,
     headers: {
@@ -113,6 +123,29 @@ export async function api<T>(path: string, init?: RequestInit): Promise<T> {
     throw new Error(detail);
   }
   return response.json();
+}
+
+async function uploadPhoto(file: File): Promise<File> {
+  if (file.size <= 900_000 || !file.type.startsWith("image/")) return file;
+  const bitmap = await createImageBitmap(file);
+  try {
+    const canvas = document.createElement("canvas");
+    const scale = Math.min(1, 1400 / Math.max(bitmap.width, bitmap.height));
+    canvas.width = Math.round(bitmap.width * scale);
+    canvas.height = Math.round(bitmap.height * scale);
+    const context = canvas.getContext("2d");
+    if (!context) throw new Error("Could not prepare this photo. Try another image.");
+    context.fillStyle = "white";
+    context.fillRect(0, 0, canvas.width, canvas.height);
+    context.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+    for (const quality of [0.85, 0.65, 0.45, 0.25]) {
+      const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/jpeg", quality));
+      if (blob && blob.size <= 900_000) return new File([blob], file.name.replace(/\.[^.]+$/, "") + ".jpg", { type: "image/jpeg" });
+    }
+    throw new Error("This photo could not be reduced for upload. Choose a smaller photo.");
+  } finally {
+    bitmap.close();
+  }
 }
 export const money = (value: number) =>
   new Intl.NumberFormat("en-IN", {

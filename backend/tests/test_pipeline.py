@@ -44,7 +44,7 @@ def test_edit_roundtrip_payload_and_no_unapproved_write(api, ready, monkeypatch)
     assert payload['product']['title'] == 'My reviewed bottle'
     assert payload['variant']['price'] == '875.50'
     assert payload['product']['status'] == 'DRAFT'
-    assert payload['media'][0]['originalSource'].endswith('-shadow.png')
+    assert payload['media'][0]['originalSource'] == 'https://catalog.example.org'+original['variants']['shadow']
     assert 'Merchant-confirmed revised' in payload['product']['descriptionHtml']
     endpoint = '/api/jobs/'+ready['id']+'/publish'
     assert api.post(endpoint, json={'channel': 'shopify', 'approved': False, 'revision': edited['revision']}).status_code == 422

@@ -8,6 +8,10 @@ Build the complete working application specified by the user on 2026-10-17 and s
 
 Latest delivery instruction: push the important project files to the original `Gautamx025/project2.0` GitHub repository. The user confirms collaborator access. Include source, runtime assets, tests, lock files, configuration templates and essential project documentation; keep credentials, installed dependencies, build output and generated QA artifacts local.
 
+Latest setup instruction: fetch and follow `https://vercel.com/get-started.md` to prepare Vercel for this coding agent. That guide calls for a global CLI, user-scoped Vercel plugin guidance and the shared OAuth MCP endpoint `https://mcp.vercel.com`. It explicitly defers project creation/linking until a project-specific operation requires it. Preserve confirmation for MCP mutations and keep all account credentials outside the repository.
+
+Latest task: the user now explicitly requests deployment on Vercel. This authorizes the project-specific hosting work deferred during onboarding. Deliver a working online listing flow, retaining labeled demo behavior when live provider credentials are absent, and verify the deployed app before reporting it ready.
+
 ## Required architecture and behavior
 
 - Next.js App Router, TypeScript, Tailwind frontend; stateless FastAPI services; adapter interfaces for segmentation, background, vision, price and stores.
