@@ -4,8 +4,6 @@
 
 A phone photo becomes a reviewable product draft: four image settings, editable English/Hindi/Marathi copy, comparable INR prices and an approved draft-store sync. The app measures its actual stages. The 30-second mark is a goal, not a fabricated result.
 
-![The catalog darkroom](docs/screenshots/landing.png)
-
 ## Quick start — Windows PowerShell
 
 Prerequisites: Node.js 24 (20.9+ supported by Next.js), Python 3.11–3.13, and npm. Python 3.11 and Node 24 were used here. No Redis, GPU, provider keys or store account is needed for the offline demo.
@@ -172,7 +170,7 @@ npm run test:e2e
 
 On macOS/Linux use `.venv/bin/python` and `PLAYWRIGHT_PRODUCTION=true npm run test:e2e`. Without that flag tests use the development frontend. Opt-in `PLAYWRIGHT_REUSE_SERVER=true` is only for an already running **demo** server.
 
-Screenshots live in [docs/screenshots](docs/screenshots). Tests cover edits reaching exact JSON/store payloads, approval and stale revision checks, reset/cancellation, retries, invalid input, bulk/history, settings, language switching, keyboard comparison, deterministic calculator math and mobile overflow. [COVERAGE.md](COVERAGE.md) maps requirements to implementation and verification. [docs/demo-script.md](docs/demo-script.md) is the two-minute judges' walkthrough.
+Browser tests generate screenshots locally in ignored `docs/screenshots/`. Tests cover edits reaching exact JSON/store payloads, approval and stale revision checks, reset/cancellation, retries, invalid input, bulk/history, settings, language switching, keyboard comparison, deterministic calculator math and mobile overflow. [COVERAGE.md](COVERAGE.md) maps requirements to implementation and verification. [docs/demo-script.md](docs/demo-script.md) is the two-minute judges' walkthrough.
 
 ### Observed final results — 17 October 2026
 
@@ -197,4 +195,4 @@ Screenshots live in [docs/screenshots](docs/screenshots). Tests cover edits reac
 
 ## Project records
 
-[Build brief](BUILD-BRIEF.md) · [Current state](current-state.md) · [Decisions](decisions.md) · [Instructions](instructions.md) · [Known issues](known-issues.md) · [Photo provenance](docs/sample-provenance.md)
+[Current state](current-state.md) · [Decisions](decisions.md) · [Instructions](instructions.md) · [Known issues](known-issues.md) · [Photo provenance](docs/sample-provenance.md)

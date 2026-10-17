@@ -12,3 +12,9 @@ test-results/
 playwright-report/
 *.tsbuildinfo
 .DS_Store
+
+# Local build brief, generated editor guidance, and visual QA outputs
+BUILD-BRIEF.md
+frontend/AGENTS.md
+docs/screenshots/
+docs/visual-qa.md

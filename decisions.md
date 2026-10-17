@@ -67,3 +67,13 @@ No superseded decisions recorded. Existing technology choices are observed imple
 - Reason: Improves sample foreground quality without runtime Internet, avoids pretending fixture recognition is vision, and prevents tests from touching saved credentials or live stores.
 - Alternatives: Runtime model downloads would break an offline stage demo; approximate masks on all samples visibly retained backgrounds.
 - Consequences: Precomputed results are always labeled demo; live-provider account verification remains separate. Model weights stay ignored under data/. Original photo and derivative provenance is in docs/sample-provenance.md.
+
+### D-007: Deliver essential project files without generated QA history
+
+- Date: 2026-10-17
+- Status: accepted
+- Source: User explicitly requests pushing to the original GitHub repository as a collaborator, with important files only; exact file selection is an implementation choice.
+- Decision: Push source, runtime sample assets, tests, dependency locks, environment templates, Docker configuration and essential documentation, including the four canonical context files. Exclude the pasted build brief, generated Next.js agent notes, screenshots and visual QA notes from every outgoing commit. Keep these files locally and preserve the original milestone history on a local backup branch.
+- Reason: A clean clone should have everything needed to run, test and maintain the app without bulky generated outputs or personal session material.
+- Alternatives: Deleting generated files only in a final commit would still upload them in earlier Git history. Squashing everything would discard the requested milestone sequence.
+- Consequences: The unpublished milestone commits receive new hashes while retaining their sequence, messages and authorship. The existing remote baseline is preserved and delivery uses a normal fast-forward push, never force push. No runtime implementation changes are needed.

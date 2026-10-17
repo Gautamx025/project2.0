@@ -45,7 +45,7 @@ Checked means the requirement has a concrete implementation and the cited verifi
 
 - [x] Warm paper/near-black/one tomato accent defined first as tokens — `globals.css`; contrast calculations: main text 13.51:1, muted on paper 5.52:1, muted on tray 4.95:1, action text 5.60:1.
 - [x] Fraunces headlines, DM Sans body, JetBrains Mono labels, all local — layout imports from Fontsource; no runtime font-CDN requests.
-- [x] Editorial grid, contact sheets, thin ink borders, crop marks, sharp corners, paper grain and hard offset shadows — landing/studio CSS; `docs/visual-qa.md` and inspected screenshots.
+- [x] Editorial grid, contact sheets, thin ink borders, crop marks, sharp corners, paper grain and hard offset shadows — landing/studio CSS; inspected local screenshots and visual QA notes (generated artifacts are excluded from GitHub delivery).
 - [x] Avoid prohibited AI/SaaS motifs and banned marketing copy — source audit and visual critique; no gradients/neon/glass/blob/emoji-icon/identical-card hero.
 - [x] Actual large stopwatch, developing trays, keyboard slider and comparable price ticks — core components and browser assertions.
 - [x] Mobile tap targets and sticky primary action; no 390px body overflow — responsive rules and mobile/presentation tests.
@@ -57,7 +57,7 @@ Checked means the requirement has a concrete implementation and the cited verifi
 - [x] Compose frontend/backend/Redis/worker configuration, persistent volumes and lockfile-based builds — `compose.yaml`, Dockerfiles; `docker compose config --quiet`. Engine/image execution unavailable; manual production path verified.
 - [x] Backend pytest and frontend production build/type checking — `backend/tests`, root npm scripts; final command results in current-state.md.
 - [x] Real two-server Playwright upload → six stages → edit → approved mock-store draft — `core.spec.ts`, isolated demo config/storage.
-- [x] Landing, processing, review and 390px screenshots saved and visually inspected, then refreshed after fixes — `docs/screenshots`, `docs/visual-qa.md`.
+- [x] Landing, processing, review and 390px screenshots saved and visually inspected, then refreshed after fixes — local ignored `docs/screenshots` and `docs/visual-qa.md`; browser tests regenerate screenshots.
 - [x] Exact setup commands, environment/provider guidance, free Shopify dev-store and Woo test-store steps — `README.md`, official links and provider reference.
 - [x] Two-minute judges' script, mocked-vs-real explanation and known limitations — `docs/demo-script.md`, README and known-issues.md.
 
