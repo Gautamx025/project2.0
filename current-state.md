@@ -6,7 +6,7 @@ Last updated: 2026-10-17
 
 Build [BUILD-BRIEF.md](BUILD-BRIEF.md) in six verified, committed milestones. This replaces the initial static demo at imported commit 70eab0c. See instructions.md and decisions.md.
 
-## Checkpoint: M1 verified
+## Checkpoint: M2 verified
 
 - Next.js 16.4.2 App Router / React / TypeScript / Tailwind scaffold in frontend/. Local Fraunces, DM Sans and JetBrains Mono fonts; paper/ink/tomato tokens in frontend/app/globals.css.
 - FastAPI health scaffold in backend/app/main.py; Python virtual environment and dependencies installed.
@@ -26,4 +26,13 @@ Build [BUILD-BRIEF.md](BUILD-BRIEF.md) in six verified, committed milestones. Th
 
 ## Next action
 
-Implement and verify M2: adapter interfaces + visible fallback, orchestrator/timing/retries, SSE, draft-only stores, queue and tests. Then M3 core UI, M4 support screens, M5 landing/architecture, M6 polish and end-to-end verification. Historical I-001–I-005 remain open until their replacement behavior is tested.
+Implement and verify M2: adapter interfaces + visible fallback, orchestrator/timing/retries, SSE, draft-only stores, queue and tests. Then M3 core UI, M4 support screens, M5 landing/architecture, M6 polish and end-to-end verification. Historical I-001â€“I-005 remain open until their replacement behavior is tested.
+
+## M2 backend
+
+- Implemented adapter protocols and real HTTP contracts for fal/Replicate SAM + FLUX, optional rembg, Gemini/OpenAI strict vision JSON, Tavily/SerpAPI INR comparable extraction, Shopify GraphQL draft + variant pricing, WooCommerce REST drafts.
+- Visible per-adapter fallback metadata; no fabricated source links; local actual image validation/compositing, trilingual sample copy, measured stage times, bounded retries/backoff, price cache and shared HTTP clients.
+- Durable atomic job repository, cancellation guards, retry from a chosen stage, SSE snapshots, edit/payload API, explicit approval + revision checks and locally idempotent draft sync. Redis/RQ queue and BackgroundTasks fallback with notices.
+- Verified: .venv/Scripts/python -m pytest -q: 23 passed. Tests exercise real orchestration and image output, edit-to-payload consistency, cancellation/recovery, queue races, malformed inputs/schema, adapter fallback/cache, and mocked external HTTP contracts. No authenticated provider or real store writes performed.
+- Known test dependency warning: latest Starlette deprecates httpx in TestClient; tests pass. Real provider account/model behavior remains unverified without keys.
+- Next: M3 core Next.js upload → SSE → review/edit → approved demo draft, with Playwright verification.

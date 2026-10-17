@@ -23,7 +23,7 @@ No superseded decisions recorded. Existing technology choices are observed imple
 - Date: 2026-10-17
 - Status: accepted
 - Source: New user build brief; supersedes D-001's review-only scope.
-- Decision: Use this imported repository, replace its three-file mock, implement the exact requested Next.js/FastAPI stack, and commit M1–M6 after verification. Local delivery with Docker/manual commands; no hosted Sites deployment is requested.
+- Decision: Use this imported repository, replace its three-file mock, implement the exact requested Next.js/FastAPI stack, and commit M1â€“M6 after verification. Local delivery with Docker/manual commands; no hosted Sites deployment is requested.
 - Reason: User requests a working local full project and milestone commits.
 - Alternatives: Keeping the old static demo cannot meet the brief.
 - Consequences: Original source remains recoverable in Git at 70eab0c; context files remain canonical at root.
@@ -47,3 +47,13 @@ No superseded decisions recorded. Existing technology choices are observed imple
 - Reason: Hard-coding a retired endpoint would make real-key mode unusable.
 - Alternatives: Preserve the requested 1.5 model string and always fall back; rejected because real provider behavior matters.
 - Consequences: Provider/model availability varies by account; failures are visible, timed, retried and labeled as fallback.
+
+### D-005: Bundled sample licensing and draft approval semantics
+
+- Date: 2026-10-17
+- Status: accepted
+- Source: User permits sourced license-free placeholders and requires approval before store writes; agent implementation choices.
+- Decision: Bundle three free Unsplash License photos with source/photographer attribution in docs/sample-provenance.md. They are not public domain. The six-stage pipeline ends at a timed draft-assembly stage; only a later explicit approval performs timed draft-store sync. No automatic stage can write to a store.
+- Reason: Offline input assets and a clear merchant approval boundary.
+- Alternatives: Runtime hotlinks break offline demos; publishing in the automatic pipeline violates the approval requirement.
+- Consequences: Sample metadata/prices remain illustrative and visibly labeled; processed images are local demo composites when providers are unavailable.
