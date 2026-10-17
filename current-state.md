@@ -36,3 +36,12 @@ Implement and verify M2: adapter interfaces + visible fallback, orchestrator/tim
 - Verified: .venv/Scripts/python -m pytest -q: 23 passed. Tests exercise real orchestration and image output, edit-to-payload consistency, cancellation/recovery, queue races, malformed inputs/schema, adapter fallback/cache, and mocked external HTTP contracts. No authenticated provider or real store writes performed.
 - Known test dependency warning: latest Starlette deprecates httpx in TestClient; tests pass. Real provider account/model behavior remains unverified without keys.
 - Next: M3 core Next.js upload → SSE → review/edit → approved demo draft, with Playwright verification.
+
+## M3 core flow verified
+
+- /create implements upload/camera/samples, responsive setup, measured live stopwatch and six developing trays, SSE + durable polling recovery, cancellation, stage retries, before/after keyboard slider, four background variants, editable trilingual copy/SEO, comparable-price ticks, saved JSON payload, explicit draft approval and demo/live result IDs.
+- Fixed screenshot-observed mobile action overlap and spurious terminal SSE warning.
+- Verified npm run build and npm run typecheck. Playwright started both real servers: 2 tests passed, including actual file upload → six stages → title/price edit → saved payload → explicit demo approval, keyboard slider, Hindi/Marathi switches and 390px no-horizontal-overflow checks.
+- Screenshots captured and inspected: docs/screenshots/processing.png, review.png, mobile.png. M6 will refresh final screenshots and critique.
+- Offline custom isolation is an edge-color heuristic and can retain original background; this is disclosed as demo compositing. Live SAM/rembg quality needs provider/model validation.
+- Next: M4 bulk, persistent history, integrations/settings and measured impact calculator.

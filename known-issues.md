@@ -6,7 +6,7 @@ Last updated: 2026-10-17
 
 ### I-001: Advertised live pipeline and publishing are simulations
 
-- Status: open
+- Status: resolved (replacement implementation)
 - Impact/severity: High functional gap if this is expected to create real listings; may be intentional demo scope, which is not documented.
 - First observed: 2026-10-17
 - Evidence: `script.js:151-172` waits on timers; `script.js:184-199` selects fixed metadata/prices; `script.js:247-250` only shows a success alert. No backend source or network API calls are present. `index.html:29` declares the FastAPI engine active without a health check.
@@ -18,7 +18,7 @@ Last updated: 2026-10-17
 
 ### I-002: Reset does not cancel or recover an active pipeline
 
-- Status: open
+- Status: resolved (replacement implementation)
 - Impact/severity: P2; reset can leave processing permanently stuck or let a cleared listing reappear.
 - First observed: 2026-10-17
 - Evidence: Start a sample run and reset before the first 700 ms wait finishes. `script.js:257-275` clears the image/key but leaves `isProcessing` true and the loader visible. The resumed run (`script.js:151-162`) then tries to decode a null image and never finishes. Reset after the image branch is selected instead lets the old run finish with generic metadata, the old sample image, and publishing re-enabled. Both paths were reproduced using the real script with controlled DOM/timers.
@@ -30,7 +30,7 @@ Last updated: 2026-10-17
 
 ### I-003: Editable listing fields do not update the copied/published payload
 
-- Status: open
+- Status: resolved (replacement implementation)
 - Impact/severity: P2; users' title, category, description, and price corrections are ignored by downstream output.
 - First observed: 2026-10-17
 - Evidence: Complete a sample run, change the title and price fields, then inspect JSON or call publish. `script.js:208-230` writes form fields and `generatedData` once; there are no field listeners or serialization before `script.js:247-254`. A focused probe confirmed the original title and price remain in the generated object and publish alert.
@@ -42,7 +42,7 @@ Last updated: 2026-10-17
 
 ### I-004: Changing the input photo leaves the previous listing publishable
 
-- Status: open
+- Status: resolved (replacement implementation)
 - Impact/severity: P2; the visible new photo can be paired with the previous product's listing and price.
 - First observed: 2026-10-17
 - Evidence: Complete the shoe sample, then select a custom image. `script.js:66-91` updates input state and the preview but does not clear `generatedData`, metadata, JSON, processed output, or disable publishing. A focused probe confirmed the old shoe payload remains active and `publishBtn.disabled` stays false.
@@ -54,7 +54,7 @@ Last updated: 2026-10-17
 
 ### I-005: Invalid or failed image decoding leaves the pipeline stuck
 
-- Status: open
+- Status: resolved (replacement implementation)
 - Impact/severity: P2; an invalid/corrupt upload can block further processing until page reload.
 - First observed: 2026-10-17
 - Evidence: `handleFile` (`script.js:66-74`) accepts any dropped file with no MIME/decode validation. `generateStudioProcessedImage` (`script.js:94-140`) only resolves on `img.onload`, with no `onerror`/rejection path. The processing handler (`script.js:144-237`) has no error/finally recovery. A non-image FileReader result and failed Image decode were simulated in a focused probe; the promise remained unresolved and processing stayed true with the button disabled.
@@ -74,3 +74,19 @@ Last updated: 2026-10-17
 ## Resolved issues
 
 None; no fixes were requested or applied.
+
+## Replacement verification (2026-10-17)
+
+The original three-file implementation was replaced in M1–M3. Historical evidence above refers to imported commit 70eab0c.
+
+- I-001: Resolved by real backend adapter contracts plus visible demo fallback provenance and explicit local-vs-live store results. backend/app/adapters.py, pipeline.py, frontend/components/Studio.tsx. Backend 23-test suite + core Playwright flow passed; authenticated provider availability remains unverified without keys.
+- I-002: Resolved by cancellation guards and per-run UI identity/disposed-stream checks. Backend cancellation and recovery tests passed; cancelled runs cannot save a late result.
+- I-003: Resolved by saved edit API, generated payload from saved listing, approval revision check. Playwright changed title and price, checked exact JSON and persisted published result.
+- I-004: Resolved by isolated per-job results and explicit new-listing/reset flow. Backend test confirms distinct bottle/bag payloads; the previous job is never reused for a new photo.
+- I-005: Resolved by server MIME/size/decode validation before job creation, failed-stage cleanup and retry. Invalid/corrupt input and failed-stage recovery tests passed.
+
+## Current limitations
+
+- DEMO_MODE uses real local image compositing, illustrative multilingual copy and clearly labeled example prices. The edge-color heuristic is less accurate than SAM/rembg; complex/white backgrounds may remain.
+- Real APIs and real store writes require credentials, account access and public HTTPS media. Contract tests mock the network boundary; no external draft has been created.
+- Local shared-filesystem persistence is suited to a hackathon, not a multi-tenant production deployment.
