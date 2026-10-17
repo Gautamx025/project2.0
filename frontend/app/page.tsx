@@ -1,0 +1,1 @@
+export default function Page() { return <main style={{padding:'8vw'}}><p>NEURALSHIFT / CATALOG TOOLS</p><h1 style={{fontSize:'clamp(3rem,8vw,7rem)'}}>Snap-2-Store</h1><p>The catalog darkroom is developing.</p></main>; }

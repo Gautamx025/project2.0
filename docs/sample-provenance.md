@@ -1,0 +1,25 @@
+# Bundled demo photo provenance
+
+Retrieved and visually inspected on 17 October 2026. These three photos are bundled
+in `frontend/public/samples`, so selecting a sample does not contact an image host.
+Each source photo page identifies the image as free under the
+[Unsplash License](https://unsplash.com/license). These are **not CC0 or public-domain
+images**. The Unsplash License permits downloading and using images, including
+commercial use; it prohibits selling images without significant modification and
+building a competing image service. Attribution is provided below.
+
+The downloaded JPEGs are resized to 1,400 pixels wide and compressed at quality 85
+by Unsplash's image CDN. The source imagery has not been retouched. The bottle and
+bag are suitable for portrait contact-sheet frames; the watch uses a landscape
+frame. Product branding, if visible, belongs to its respective owner. These photos
+illustrate demo products and imply no endorsement or actual inventory.
+
+| Local file | Subject and suggested alternative text | Photographer | Source photo page | Download URL |
+| --- | --- | --- | --- | --- |
+| `frontend/public/samples/bottle.jpg` | White stainless-steel water bottle with a silver cap beside white flowers | [Vanesa Giaconi](https://unsplash.com/@vanesagiaconi) | [White bottle on white table](https://unsplash.com/photos/white-bottle-on-white-table-Aej5gA11eHQ) | [JPEG](https://images.unsplash.com/photo-1605714312496-01e90cb509cc?auto=format&fit=crop&fm=jpg&q=85&w=1400) |
+| `frontend/public/samples/watch.jpg` | White-band smartwatch with a black face on a white surface | [Jozsef Hocza](https://unsplash.com/@hocza) | [White and black digital watch](https://unsplash.com/photos/white-and-black-digital-watch-h1MnFsRI-_I) | [JPEG](https://images.unsplash.com/photo-1594619272803-932ee1b5a0d9?auto=format&fit=crop&fm=jpg&q=85&w=1400) |
+| `frontend/public/samples/bag.jpg` | Brown leather backpack with a front zip pocket on a light background | [Wiser by the Mile](https://unsplash.com/@wiserbythemile) | [Brown leather backpack on white surface](https://unsplash.com/photos/brown-leather-backpack-on-white-surface-3o-X8WJOP5E) | [JPEG](https://images.unsplash.com/photo-1622560480605-d83c853bc5c3?auto=format&fit=crop&fm=jpg&q=85&w=1400) |
+
+The images are demo inputs, not proof of AI processing. Any local background
+transformation or precomputed listing must retain the app's visible demo-data
+disclosure. Sample listing text and pricing are illustrative data.

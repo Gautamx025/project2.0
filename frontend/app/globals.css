@@ -1,0 +1,21 @@
+@import "tailwindcss";
+@theme inline {
+  --color-paper: #f4f1ea;
+  --color-ink: #252621;
+  --color-accent: #b93620;
+  --font-sans: 'DM Sans', sans-serif;
+  --font-serif: 'Fraunces', Georgia, serif;
+  --font-mono: 'JetBrains Mono', monospace;
+}
+:root { --paper:#f4f1ea; --ink:#252621; --accent:#b93620; --muted:#68675e; --line:#c9c5ba; --white:#fffcf6; }
+* { box-sizing:border-box; }
+body { margin:0; background:var(--paper); color:var(--ink); font-family:'DM Sans',sans-serif; }
+h1,h2,h3,p { margin:0; }
+h1,h2,h3 { font-family:'Fraunces',Georgia,serif; font-weight:400; }
+a { color:inherit; }
+button,input,select,textarea { font:inherit; }
+button,a,input,select,textarea,summary { -webkit-tap-highlight-color:transparent; }
+:focus-visible { outline:3px solid var(--accent); outline-offset:4px; }
+button { cursor:pointer; }
+button:disabled { cursor:not-allowed; opacity:.5; }
+@media(prefers-reduced-motion:reduce) { *,*::before,*::after { animation:none!important; transition:none!important; scroll-behavior:auto!important; } }

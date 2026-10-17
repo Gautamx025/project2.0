@@ -1,0 +1,14 @@
+{
+  "name": "snap-2-store",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": ["frontend"],
+  "scripts": {
+    "dev": "npm run dev --workspace frontend",
+    "build": "npm run build --workspace frontend",
+    "start": "npm run start --workspace frontend",
+    "typecheck": "npm run typecheck --workspace frontend",
+    "test:e2e": "playwright test"
+  },
+  "devDependencies": {"@playwright/test": "latest"}
+}

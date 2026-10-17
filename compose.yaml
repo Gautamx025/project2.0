@@ -1,0 +1,36 @@
+services:
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+    environment:
+      BACKEND_URL: http://backend:8000
+      NEXT_TELEMETRY_DISABLED: '1'
+    ports: ['3000:3000']
+    depends_on: [backend]
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    env_file: .env
+    environment:
+      REDIS_URL: redis://redis:6379/0
+      PUBLIC_BASE_URL: http://localhost:3000
+    ports: ['8000:8000']
+    volumes: [snap-data:/app/data]
+    depends_on: [redis]
+  worker:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    command: python -m backend.app.worker
+    env_file: .env
+    environment:
+      REDIS_URL: redis://redis:6379/0
+    volumes: [snap-data:/app/data]
+    depends_on: [redis]
+  redis:
+    image: redis:7-alpine
+    ports: ['127.0.0.1:6379:6379']
+volumes:
+  snap-data:

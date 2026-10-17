@@ -1,0 +1,26 @@
+# Instructions: Snap-2-Store
+
+Last updated: 2026-10-17
+
+## Current task
+
+Build the complete working application described in [BUILD-BRIEF.md](BUILD-BRIEF.md), supplied by the user on 2026-10-17. This supersedes the earlier review-only scope. Work autonomously, choose and record sensible defaults, verify each milestone, and commit after each milestone. Do not ask product-clarification questions.
+
+## Required architecture and behavior
+
+- Next.js App Router, TypeScript, Tailwind frontend; stateless FastAPI services; adapter interfaces for segmentation, background, vision, price and stores.
+- Real configured providers plus visible offline/demo fallbacks on missing keys or failures. Never imply a demo draft reached a live store. Secrets stay in ignored .env files; settings forms update the backend environment without returning secrets.
+- Six visible, separately timed stages; real elapsed timings, SSE, bounded retry/backoff and per-stage retry. Redis/RQ bulk queue with BackgroundTasks fallback.
+- 1–3 photos per listing; validation, camera capture, background variants, editable drafts, multilingual English/Hindi/Marathi, approval before draft publishing, bulk, history, settings, impact calculator, landing and architecture pages.
+- Paper/ink/tomato editorial design, serif/grotesque/mono local fonts, sharp borders and offset shadows; responsive and keyboard accessible, reduced-motion support. All impact claims are projected.
+- Verify pytest, production frontend build, real Playwright demo flow and desktop/mobile screenshots. Inspect screenshots, fix gaps and complete COVERAGE.md honestly.
+- Provide README manual and Docker setup, Shopify/WooCommerce setup, judge demo script, provenance and known limitations.
+
+## Context convention
+
+User-supplied AGENTS.md requires project-context before implementation and maintenance at milestones. Canonical files remain the four root lowercase files; Windows treats DECISIONS.md as the same file as decisions.md. Preserve stable IDs and historical evidence.
+
+## Sources
+
+- [BUILD-BRIEF.md](BUILD-BRIEF.md): full current user-authored requirements.
+- User-supplied AGENTS.md in this chat.
