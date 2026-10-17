@@ -5,7 +5,7 @@ from pathlib import Path
 from dotenv import load_dotenv, set_key
 
 ROOT = Path(__file__).resolve().parents[2]
-ENV_FILE = ROOT / '.env'
+ENV_FILE = Path(os.getenv('SETTINGS_ENV_FILE') or ROOT / '.env')
 
 @dataclass(frozen=True)
 class Settings:
@@ -43,6 +43,7 @@ def public_settings() -> dict:
             'configured': {name: bool(os.getenv(name.upper())) for name in SECRET_FIELDS}}
 
 def save_settings(values: dict) -> dict:
+    ENV_FILE.parent.mkdir(parents=True, exist_ok=True)
     ENV_FILE.touch(exist_ok=True)
     for name, value in values.items():
         if name not in SECRET_FIELDS | PUBLIC_FIELDS:

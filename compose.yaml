@@ -16,6 +16,7 @@ services:
     environment:
       REDIS_URL: redis://redis:6379/0
       PUBLIC_BASE_URL: http://localhost:3000
+      SETTINGS_ENV_FILE: /app/data/config/.env
     ports: ['8000:8000']
     volumes: [snap-data:/app/data]
     depends_on: [redis]
@@ -27,6 +28,7 @@ services:
     env_file: .env
     environment:
       REDIS_URL: redis://redis:6379/0
+      SETTINGS_ENV_FILE: /app/data/config/.env
     volumes: [snap-data:/app/data]
     depends_on: [redis]
   redis:

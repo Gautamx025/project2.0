@@ -45,3 +45,13 @@ Implement and verify M2: adapter interfaces + visible fallback, orchestrator/tim
 - Screenshots captured and inspected: docs/screenshots/processing.png, review.png, mobile.png. M6 will refresh final screenshots and critique.
 - Offline custom isolation is an edge-color heuristic and can retain original background; this is disclosed as demo compositing. Live SAM/rembg quality needs provider/model validation.
 - Next: M4 bulk, persistent history, integrations/settings and measured impact calculator.
+
+## M4 support screens verified
+
+- /bulk accepts up to 20 products, one photo/listing each, shows per-item queue/stage state, review links, per-item approvals and explicit selected-batch draft approval. Batch IDs persist locally; listing history persists server-side.
+- /history filters and reopens drafts, synced draft receipts, failures and cancelled jobs.
+- /settings persists provider/demo/store preferences and masked secrets only to a server .env, with read-only connection tests and honest demo labels. Compose shares data/config/.env across API and RQ worker; manual mode uses root .env.
+- /impact computes modeled monthly time/cost savings using average stored processing times and seller-selected 25–40 minute baseline; fee/manual-review caveats are visible.
+- Next.js generated frontend/AGENTS.md during dev. Read its local component/layout/search-param guides before further frontend changes.
+- Verified TypeScript, 3 supporting Playwright flows (bulk/history, settings, calculator), plus a strengthened calculator test with 60s/120s stored times: 120 products at 30 min baseline yields 57h and INR 28,500 at INR 500/hour; per-photo basis yields INR 11,400 at INR 100/photo. Backend 23 tests and Compose config still pass.
+- Next: M5 editorial landing, projected impact story, architecture diagram and Under the hood.
