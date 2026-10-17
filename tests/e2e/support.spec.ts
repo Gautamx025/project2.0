@@ -1,45 +1,87 @@
-import {test,expect} from '@playwright/test';
-import path from 'node:path';
-test('batch upload, individual review approval, bulk draft sync and persistent history',async({page})=>{
-  await page.goto('/bulk');
-  await page.getByTestId('batch-input').setInputFiles(['bottle','bag'].map(name=>path.join(process.cwd(),'frontend/public/samples/'+name+'.jpg')));
-  await page.getByRole('button',{name:'Develop 2 products'}).click();
-  await expect(page.getByRole('article')).toHaveCount(2);
-  await expect(page.getByText('Draft ready',{exact:true})).toHaveCount(2);
-  const reviews=page.getByRole('checkbox',{name:/^Reviewed /});
+import { test, expect } from "@playwright/test";
+import path from "node:path";
+test("batch upload, individual review approval, bulk draft sync and persistent history", async ({
+  page,
+}) => {
+  await page.goto("/bulk");
+  await page
+    .getByTestId("batch-input")
+    .setInputFiles(
+      ["bottle", "bag"].map((name) =>
+        path.join(process.cwd(), "frontend/public/samples/" + name + ".jpg"),
+      ),
+    );
+  await page.getByRole("button", { name: "Develop 2 products" }).click();
+  await expect(page.getByRole("article")).toHaveCount(2);
+  await expect(page.getByText("Draft ready", { exact: true })).toHaveCount(2);
+  const reviews = page.getByRole("checkbox", { name: /^Reviewed / });
   await expect(reviews).toHaveCount(2);
-  await reviews.nth(0).check();await reviews.nth(1).check();
-  await page.getByLabel('Destination',{exact:true}).selectOption('woocommerce');
-  await page.getByRole('checkbox',{name:/I approve creating all selected/}).check();
-  await page.getByRole('button',{name:'Approve selected drafts'}).click();
-  await expect(page.getByText('Demo draft saved',{exact:true})).toHaveCount(2);
-  await page.goto('/history');
-  await page.getByRole('combobox',{name:'Filter listing history'}).selectOption('published');
-  await expect(page.getByRole('article').first()).toBeVisible();
-  await expect(page.getByRole('article').first()).toContainText('Demo draft saved');
-  await page.reload();await expect(page.getByRole('article').first()).toBeVisible();
+  await reviews.nth(0).check();
+  await reviews.nth(1).check();
+  await page
+    .getByLabel("Destination", { exact: true })
+    .selectOption("woocommerce");
+  await page
+    .getByRole("checkbox", { name: /I approve creating all selected/ })
+    .check();
+  await page.getByRole("button", { name: "Approve selected drafts" }).click();
+  await expect(page.getByText("Demo draft saved", { exact: true })).toHaveCount(
+    2,
+  );
+  await page.goto("/history");
+  await page
+    .getByRole("combobox", { name: "Filter listing history" })
+    .selectOption("published");
+  await expect(page.getByRole("article").first()).toBeVisible();
+  await expect(page.getByRole("article").first()).toContainText(
+    "Demo draft saved",
+  );
+  await page.reload();
+  await expect(page.getByRole("article").first()).toBeVisible();
 });
-test('settings connection test is explicit about demo mode and preserves provider choice',async({page})=>{
-  await page.goto('/settings');
-  await expect(page.getByLabel('Vision provider',{exact:true})).toBeVisible();
-  await page.getByLabel('Vision provider',{exact:true}).selectOption('openai');
-  await page.getByRole('button',{name:'Save & test Shopify connection'}).click();
+test("settings connection test is explicit about demo mode and preserves provider choice", async ({
+  page,
+}) => {
+  await page.goto("/settings");
+  await expect(
+    page.getByLabel("Vision provider", { exact: true }),
+  ).toBeVisible();
+  await page
+    .getByLabel("Vision provider", { exact: true })
+    .selectOption("openai");
+  await page
+    .getByRole("button", { name: "Save & test Shopify connection" })
+    .click();
   await expect(page.getByText(/No live connection was tested/)).toBeVisible();
-  await page.reload();await expect(page.getByLabel('Vision provider',{exact:true})).toHaveValue('openai');
-  await page.getByLabel('Vision provider',{exact:true}).selectOption('gemini');
-  await page.getByRole('button',{name:/^Save settings/}).click();
+  await page.reload();
+  await expect(page.getByLabel("Vision provider", { exact: true })).toHaveValue(
+    "openai",
+  );
+  await page
+    .getByLabel("Vision provider", { exact: true })
+    .selectOption("gemini");
+  await page.getByRole("button", { name: /^Save settings/ }).click();
   await expect(page.getByText(/Settings saved on the backend/)).toBeVisible();
 });
-test('impact calculator averages stored measurements and responds to seller inputs',async({page})=>{
-  await page.route('**/api/jobs',route=>route.fulfill({json:[{elapsed_ms:60000,result:{},demo_data:true},{elapsed_ms:120000,result:{},demo_data:true}]}));
-  await page.goto('/impact');
-  await expect(page.getByTestId('hours-saved')).toBeVisible();
-  await page.getByLabel('Products per month').fill('120');
-  await page.getByLabel('Cost per hour (₹)').fill('500');
-  await expect(page.getByTestId('hours-saved')).toContainText('57.0');
-  await expect(page.getByTestId('money-saved')).toHaveText('₹28,500');
-  await page.getByLabel('Your cost basis').selectOption('photo');
-  await page.getByLabel('Cost per photo (₹)').fill('100');
-  const result=await page.getByTestId('money-saved').innerText();
-  expect(result).toBe('₹11,400');
+test("impact calculator averages stored measurements and responds to seller inputs", async ({
+  page,
+}) => {
+  await page.route("**/api/jobs", (route) =>
+    route.fulfill({
+      json: [
+        { elapsed_ms: 60000, result: {}, demo_data: true },
+        { elapsed_ms: 120000, result: {}, demo_data: true },
+      ],
+    }),
+  );
+  await page.goto("/impact");
+  await expect(page.getByTestId("hours-saved")).toBeVisible();
+  await page.getByLabel("Products per month").fill("120");
+  await page.getByLabel("Cost per hour (₹)").fill("500");
+  await expect(page.getByTestId("hours-saved")).toContainText("57.0");
+  await expect(page.getByTestId("money-saved")).toHaveText("₹28,500");
+  await page.getByLabel("Your cost basis").selectOption("photo");
+  await page.getByLabel("Cost per photo (₹)").fill("100");
+  const result = await page.getByTestId("money-saved").innerText();
+  expect(result).toBe("₹11,400");
 });

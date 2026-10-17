@@ -117,3 +117,15 @@ def test_new_jobs_do_not_reuse_previous_listing(api, ready):
     assert bag['result']['copy']['title'] == 'Everyday brown backpack'
     assert bag['result']['final_price'] == 1899
     assert bag['store_result'] is None
+
+def test_saving_one_language_preserves_edits_to_other_languages(api, ready):
+    listing=ready['result']
+    translations=listing['translations']
+    translations['en']['title']='My edited English bottle'
+    translations['hi']['title']='मेरी पानी की बोतल'
+    response=api.patch('/api/jobs/'+ready['id'],json={'copy':translations['mr'],'translations':translations,'language':'mr','selected_style':'studio','final_price':749})
+    assert response.status_code==200
+    saved=api.get('/api/jobs/'+ready['id']).json()['result']
+    assert saved['translations']['en']['title']=='My edited English bottle'
+    assert saved['translations']['hi']['title']=='मेरी पानी की बोतल'
+    assert saved['copy']['title']=='स्टीलची पाण्याची बाटली'

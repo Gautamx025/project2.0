@@ -2,7 +2,9 @@
   "name": "snap-2-store",
   "version": "1.0.0",
   "private": true,
-  "workspaces": ["frontend"],
+  "workspaces": [
+    "frontend"
+  ],
   "scripts": {
     "dev": "npm run dev --workspace frontend",
     "build": "npm run build --workspace frontend",
@@ -10,5 +12,9 @@
     "typecheck": "npm run typecheck --workspace frontend",
     "test:e2e": "playwright test"
   },
-  "devDependencies": {"@playwright/test": "latest"}
+  "devDependencies": {
+    "@axe-core/playwright": "4.14.0",
+    "@playwright/test": "latest",
+    "prettier": "3.9.10"
+  }
 }

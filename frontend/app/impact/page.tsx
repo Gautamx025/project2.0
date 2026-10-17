@@ -1,2 +1,26 @@
-import ImpactCalculator from '@/components/ImpactCalculator';
-export default function Page(){return <div className="page"><div className="page-heading"><div><p className="eyebrow">A LITTLE MERCHANT MATH / 05</p><h1>Less catalog work.<br/><em>More shop time.</em></h1></div><div className="heading-note"><p>Use your own numbers.<br/>We’ll use your actual measured runs.</p><span className="badge">PROJECTED SAVINGS · NOT A GUARANTEE</span></div></div><ImpactCalculator/></div>;}
+import ImpactCalculator from "@/components/ImpactCalculator";
+export default function Page() {
+  return (
+    <div className="page">
+      <div className="page-heading">
+        <div>
+          <p className="eyebrow">A LITTLE MERCHANT MATH / 05</p>
+          <h1>
+            Less catalog work.
+            <br />
+            <em>More shop time.</em>
+          </h1>
+        </div>
+        <div className="heading-note">
+          <p>
+            Use your own numbers.
+            <br />
+            We’ll use your actual measured runs.
+          </p>
+          <span className="badge">PROJECTED SAVINGS · NOT A GUARANTEE</span>
+        </div>
+      </div>
+      <ImpactCalculator />
+    </div>
+  );
+}

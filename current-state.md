@@ -2,64 +2,45 @@
 
 Last updated: 2026-10-17
 
-## Scope
+## Scope and checkpoint
 
-Build [BUILD-BRIEF.md](BUILD-BRIEF.md) in six verified, committed milestones. This replaces the initial static demo at imported commit 70eab0c. See instructions.md and decisions.md.
+- Built the full local app requested in [BUILD-BRIEF.md](BUILD-BRIEF.md), replacing the imported static mock at `70eab0c`.
+- M1–M6 are implemented and verified in order, each with a milestone commit. This final handoff record is included in M6.
+- All requested screens and provider paths are implemented. The offline production-server flow is verified. Authenticated cloud/store operation is not verified without team credentials.
+- Requirements: [instructions.md](instructions.md). Choices/provenance: [decisions.md](decisions.md). Requirement map: [COVERAGE.md](COVERAGE.md), 44 checked items with explicit verification limits.
 
-## Checkpoint: M2 verified
+## Implemented
 
-- Next.js 16.4.2 App Router / React / TypeScript / Tailwind scaffold in frontend/. Local Fraunces, DM Sans and JetBrains Mono fonts; paper/ink/tomato tokens in frontend/app/globals.css.
-- FastAPI health scaffold in backend/app/main.py; Python virtual environment and dependencies installed.
-- compose.yaml contains frontend, backend, Redis and RQ worker services with shared data volume. Worker implementation follows in M2.
-- .env.example covers all providers and optional secrets. Ignored .env initialized in DEMO_MODE=true. Env-lint: no missing/extra keys, optional secrets intentionally empty.
-- Three local sample photos and licensing at docs/sample-provenance.md; official API contracts at docs/provider-reference.md.
-- Verified: npm run build (Webpack production build including TypeScript), backend health function assertion, docker compose config --quiet.
-- Restricted sandbox compiler workers stalled; escalated build passed. No visual app QA or end-to-end feature checks yet.
-- Browser Chromium installation in progress. No provider/store credentials or external write calls used.
+- Next.js 16.4.2 App Router, React, TypeScript, Tailwind; local Fraunces/DM Sans/JetBrains Mono fonts and paper/ink/tomato editorial design.
+- Routes: `/`, `/create`, `/bulk`, `/history`, `/settings`, `/impact`, `/under-the-hood`.
+- 1–3 photo validation/camera/previews; six separately timed stages and live SSE; cancellation, per-stage retry/backoff and durable job recovery.
+- Hosted SAM/FLUX, optional selectable vision/search providers, CPU rembg, labeled offline/precomputed fallbacks, four background variants, strict trilingual copy and source-linked INR prices/cache.
+- Keyboard before/after slider, editable copy/SEO/tags/price with all-language persistence, precise fractional INR preview, draft preview and saved JSON payload.
+- Explicit approval and revision checks before Shopify/WooCommerce DRAFT creation; local duplicate approvals are idempotent. Demo receipts link directly to the saved job. No draft is published to shoppers.
+- Bulk per-item/selected-batch review and approval, persistent ledger, masked integration settings/connection tests and measured impact math.
+- Inline architecture SVG, projected-figure disclosures, setup/store guides, two-minute judge script and screenshot critique.
 
-## Structure
+## Important source locations
 
-- frontend/: Next.js app, public samples, frontend Dockerfile.
-- backend/: FastAPI application and Python requirements; adapters/tests next.
-- Root npm workspace, package-lock.json, Compose, ignored .venv and .env.
-- Canonical context: current-state.md, decisions.md, instructions.md, known-issues.md.
+- `frontend/app/`: routes and design system; `frontend/components/Studio.tsx`: core UI; `frontend/lib/api.ts`: typed API boundary.
+- `backend/app/main.py`: API/SSE/approval; `pipeline.py`: timed stages; `adapters.py`: provider interfaces and HTTP contracts; `repository.py`: atomic persistence; `queueing.py`/`worker.py`: queue interface and RQ.
+- `frontend/public/samples/`: 3 licensed JPEGs and 3 rembg-precomputed cutouts. Exact bundled-file uploads use fixtures by content hash; this is not visual recognition.
+- `.env.example`: configuration names. Ignored `.env` is initialized for demo mode. `data/`, `.venv/`, node_modules and build artifacts are ignored.
+- Compose shares durable data and server `.env` across API/worker. Manual mode uses root `.env`. Root npm workspace and both dependency locks are provided.
 
-## Next action
+## Verified on 2026-10-17
 
-Implement and verify M2: adapter interfaces + visible fallback, orchestrator/timing/retries, SSE, draft-only stores, queue and tests. Then M3 core UI, M4 support screens, M5 landing/architecture, M6 polish and end-to-end verification. Historical I-001â€“I-005 remain open until their replacement behavior is tested.
+- `.venv/Scripts/python -m pytest -q`: **29 passed**. Real orchestration/image output, schema/errors, retry/cancel/restart, queue race/fallback, exact edit/payload approval behavior, provider HTTP contracts and multilingual persistence. External network boundaries are mocked.
+- `npm run build`: **passed**, including TypeScript and all 7 routes. Uses the documented Webpack path because restricted compiler workers stalled under the initial sandbox.
+- `PLAYWRIGHT_PRODUCTION=true npm run test:e2e`: **11 passed in 25.0 s**, starting both real servers with isolated demo settings/data. Includes third-party-network-blocked sample flow, WCAG A/AA scans on all pages + review, 390px/mobile, real file upload, six stages, fractional-price/edit/payload approval, language preservation, reset/retry, bulk/history/settings and independently specified calculator math.
+- Actual CPU rembg live adapter: alpha mask verified, 4.18 s including startup. All three derived sample masks generated and visually inspected. Runtime sample demos require no model download.
+- Final landing, processing, review and 390px screenshots opened and inspected after fixes; see `docs/screenshots` and `docs/visual-qa.md`.
+- `docker compose config --quiet`, `pip check`, env-lint and Git whitespace checks passed. No missing/extra environment keys; unused secrets are intentionally empty.
+- Browser test servers were shut down by Playwright after verification. No app is claimed to be currently serving. Start it using README's two-terminal commands.
 
-## M2 backend
+## Limits and next action
 
-- Implemented adapter protocols and real HTTP contracts for fal/Replicate SAM + FLUX, optional rembg, Gemini/OpenAI strict vision JSON, Tavily/SerpAPI INR comparable extraction, Shopify GraphQL draft + variant pricing, WooCommerce REST drafts.
-- Visible per-adapter fallback metadata; no fabricated source links; local actual image validation/compositing, trilingual sample copy, measured stage times, bounded retries/backoff, price cache and shared HTTP clients.
-- Durable atomic job repository, cancellation guards, retry from a chosen stage, SSE snapshots, edit/payload API, explicit approval + revision checks and locally idempotent draft sync. Redis/RQ queue and BackgroundTasks fallback with notices.
-- Verified: .venv/Scripts/python -m pytest -q: 23 passed. Tests exercise real orchestration and image output, edit-to-payload consistency, cancellation/recovery, queue races, malformed inputs/schema, adapter fallback/cache, and mocked external HTTP contracts. No authenticated provider or real store writes performed.
-- Known test dependency warning: latest Starlette deprecates httpx in TestClient; tests pass. Real provider account/model behavior remains unverified without keys.
-- Next: M3 core Next.js upload → SSE → review/edit → approved demo draft, with Playwright verification.
-
-## M3 core flow verified
-
-- /create implements upload/camera/samples, responsive setup, measured live stopwatch and six developing trays, SSE + durable polling recovery, cancellation, stage retries, before/after keyboard slider, four background variants, editable trilingual copy/SEO, comparable-price ticks, saved JSON payload, explicit draft approval and demo/live result IDs.
-- Fixed screenshot-observed mobile action overlap and spurious terminal SSE warning.
-- Verified npm run build and npm run typecheck. Playwright started both real servers: 2 tests passed, including actual file upload → six stages → title/price edit → saved payload → explicit demo approval, keyboard slider, Hindi/Marathi switches and 390px no-horizontal-overflow checks.
-- Screenshots captured and inspected: docs/screenshots/processing.png, review.png, mobile.png. M6 will refresh final screenshots and critique.
-- Offline custom isolation is an edge-color heuristic and can retain original background; this is disclosed as demo compositing. Live SAM/rembg quality needs provider/model validation.
-- Next: M4 bulk, persistent history, integrations/settings and measured impact calculator.
-
-## M4 support screens verified
-
-- /bulk accepts up to 20 products, one photo/listing each, shows per-item queue/stage state, review links, per-item approvals and explicit selected-batch draft approval. Batch IDs persist locally; listing history persists server-side.
-- /history filters and reopens drafts, synced draft receipts, failures and cancelled jobs.
-- /settings persists provider/demo/store preferences and masked secrets only to a server .env, with read-only connection tests and honest demo labels. Compose shares data/config/.env across API and RQ worker; manual mode uses root .env.
-- /impact computes modeled monthly time/cost savings using average stored processing times and seller-selected 25–40 minute baseline; fee/manual-review caveats are visible.
-- Next.js generated frontend/AGENTS.md during dev. Read its local component/layout/search-param guides before further frontend changes.
-- Verified TypeScript, 3 supporting Playwright flows (bulk/history, settings, calculator), plus a strengthened calculator test with 60s/120s stored times: 120 products at 30 min baseline yields 57h and INR 28,500 at INR 500/hour; per-photo basis yields INR 11,400 at INR 100/photo. Backend 23 tests and Compose config still pass.
-- Next: M5 editorial landing, projected impact story, architecture diagram and Under the hood.
-
-## M5 landing and architecture verified
-
-- / now presents asymmetric editorial contact sheets, the 25–40 minute problem, seller groups, six stages, clearly labeled 98%/90%/+15–25% projections, measured impact calculator and the required closing line.
-- /under-the-hood includes inline draw.io-exported SVG with embedded editable source, tool roles, feasibility, scale/storage limits, caching/concurrency optimization and roadmap.
-- Verified production build for all seven routes, valid SVG XML and a Playwright presentation check: six steps, projected labels, required copy, inline diagram and no horizontal body overflow at 390px.
-- Inspected landing desktop/mobile and architecture-mobile screenshots. Design uses warm paper, serif/grotesque/mono typography, ink rules, contact sheets and flat offset shadows. No gradients, neon, floating blobs or default rounded-card hero.
-- Next: M6 provider-contract audit, final polish, exact README/store setup, judge demo, complete requirement coverage, full backend/build/browser run and refreshed screenshots.
+- Docker engine was unavailable, so container image/broker execution was not tested. Manual production servers are the verified run path; queue fallback/races have tests.
+- No authenticated cloud model/search request or real store write was made. Live media import requires public HTTPS; inspect any partial/uncertain store result before retrying.
+- General demo-image isolation remains approximate; sample masks are precomputed. Physical phone capture, full screen-reader/cross-browser testing and multi-tenant production operation remain outside verified scope.
+- Next action: use the README to run the app/judges' demo; when credentials are supplied, perform a deliberately approved development-store/provider smoke test. No push or deployment was requested or performed.

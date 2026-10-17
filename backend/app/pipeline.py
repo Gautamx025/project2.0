@@ -64,7 +64,7 @@ async def run_job(job_id: str, start_stage: int = 0):
                 for source in sources:
                     await asyncio.to_thread(normalize_image, source.read_bytes())
             elif index == 1:
-                outcome = await execute(Segmentation(config.segmentation), config, sources[0], repository.media / f'{job_id}-cutout.png', on_retry=retry)
+                outcome = await execute(Segmentation(config.segmentation, job['sample_key']), config, sources[0], repository.media / f'{job_id}-cutout.png', on_retry=retry)
                 artifacts['cutout'] = outcome.value
             elif index == 2:
                 async def variant(style):

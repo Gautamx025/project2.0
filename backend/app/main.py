@@ -1,5 +1,6 @@
 import asyncio
 import json
+import hashlib
 import time
 from contextlib import asynccontextmanager
 from pathlib import Path
@@ -16,6 +17,14 @@ from .repository import Repository
 
 @asynccontextmanager
 async def lifespan(app):
+    # Local BackgroundTasks cannot survive an API restart; make interrupted work retryable.
+    for job in repository.all():
+        if job['queue'] == 'background' and job['status'] in {'queued', 'processing'}:
+            job.update(status='failed', error='The local server restarted. Retry the earliest unfinished stage.')
+            for stage in job['stages']:
+                if stage['status'] == 'running':
+                    stage.update(status='failed', reason=job['error'])
+            repository.save(job)
     yield
     await close_clients()
 
@@ -33,6 +42,11 @@ def get_job(job_id: str) -> dict:
 async def conflict(request: Request, exc: RuntimeError):
     from fastapi.responses import JSONResponse
     return JSONResponse(status_code=409, content={'detail': str(exc)})
+
+@app.exception_handler(FileNotFoundError)
+async def missing_record(request: Request, exc: FileNotFoundError):
+    from fastapi.responses import JSONResponse
+    return JSONResponse(status_code=404, content={'detail': 'Listing not found.'})
 
 @app.get('/api/health')
 def health():
@@ -60,6 +74,14 @@ async def create_job(contents: list[bytes], key: str, style: str, language: str,
             images.append(await asyncio.to_thread(normalize_image, content))
     except ValueError as exc:
         raise HTTPException(422, str(exc))
+    # Exact bundled inputs may use their precomputed demo assets. This is not image recognition.
+    if key == 'custom' and len(contents) == 1:
+        digest = hashlib.sha256(contents[0]).digest()
+        for candidate in ('bottle', 'watch', 'bag'):
+            sample = ROOT/'frontend'/'public'/'samples'/f'{candidate}.jpg'
+            if sample.exists() and hashlib.sha256(sample.read_bytes()).digest() == digest:
+                key = candidate
+                break
     job = new_job([], key, style, language)
     for index, image in enumerate(images):
         name = f'{job["id"]}-raw-{index}.jpg'
@@ -145,6 +167,8 @@ def edit_job(job_id: str, body: EditRequest):
         if job['status'] != 'ready' or not job['result']:
             raise HTTPException(409, 'Only a ready, unsynced draft can be edited.')
         listing = job['result']
+        if body.translations is not None:
+            listing['translations'].update({language: copy.model_dump() for language, copy in body.translations.items()})
         listing.update(copy=body.listing_copy.model_dump(), final_price=body.final_price, language=body.language, selected_style=body.selected_style, approved=False)
         listing['translations'][body.language] = body.listing_copy.model_dump()
         return repository.save(job)

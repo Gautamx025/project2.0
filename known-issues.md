@@ -2,91 +2,67 @@
 
 Last updated: 2026-10-17
 
-## Active issues
+## Active defects
 
-### I-001: Advertised live pipeline and publishing are simulations
+No confirmed blocking defects remain in the verified offline workflow. External-service and platform verification limits are listed below; they are not represented as successful live checks.
 
-- Status: resolved (replacement implementation)
-- Impact/severity: High functional gap if this is expected to create real listings; may be intentional demo scope, which is not documented.
-- First observed: 2026-10-17
-- Evidence: `script.js:151-172` waits on timers; `script.js:184-199` selects fixed metadata/prices; `script.js:247-250` only shows a success alert. No backend source or network API calls are present. `index.html:29` declares the FastAPI engine active without a health check.
-- Expected: UI claims and success messages should accurately reflect actual service behavior.
-- Actual: No SAM/vision/search/store service runs, no listing is created, and custom photos are drawn intact on a canvas (`script.js:94-140`).
-- Cause: Confirmed by source inspection; all behavior is local simulation.
-- Workaround: Treat the application as a frontend demo only.
-- Next action: Clarify the next milestone, then either label the simulation honestly or implement and verify the intended services.
+## Resolved history
 
-### I-002: Reset does not cancel or recover an active pipeline
+### I-001: Static mock advertised live services
+- Status: resolved, 2026-10-17.
+- Original impact: imported `70eab0c` showed FastAPI/AI/store success without any backend or store call (`script.js:151-250`, `index.html:29`).
+- Resolution: real provider/store adapter paths and explicit local-vs-live fallback provenance. Demo results and draft receipts are labeled. Stage 6 assembles a draft; only explicit approval invokes a store.
+- Evidence: backend contract/fallback/approval tests and the production browser upload-to-demo-draft flow passed. Authenticated calls remain unverified, not silently asserted.
 
-- Status: resolved (replacement implementation)
-- Impact/severity: P2; reset can leave processing permanently stuck or let a cleared listing reappear.
-- First observed: 2026-10-17
-- Evidence: Start a sample run and reset before the first 700 ms wait finishes. `script.js:257-275` clears the image/key but leaves `isProcessing` true and the loader visible. The resumed run (`script.js:151-162`) then tries to decode a null image and never finishes. Reset after the image branch is selected instead lets the old run finish with generic metadata, the old sample image, and publishing re-enabled. Both paths were reproduced using the real script with controlled DOM/timers.
-- Expected: Reset cancels pending work, restores idle state, and permits a fresh run.
-- Actual: Async work continues using mutated global state, or remains unresolved; a new run may immediately return at `script.js:145`.
-- Cause: Confirmed; no cancellation/run identity check, and reset does not restore processing/loader state.
-- Workaround: Reload the page after resetting an active pipeline.
-- Next action: Introduce run cancellation or identity checks, snapshot run inputs, and reset all pending/processing state; verify early and late reset cases.
+### I-002: Reset retained or revived an active run
+- Status: resolved, 2026-10-17.
+- Original impact: imported reset cleared global inputs without cancelling timers/processing; a run could hang or repopulate mismatched results (`script.js:144-275`).
+- Resolution: per-job records, cancellation under a write lock, guards against late stage saves, UI generation identities and disposed streams.
+- Evidence: backend cancellation/recovery tests plus browser reset during an in-flight upload and UI retry checks passed.
 
-### I-003: Editable listing fields do not update the copied/published payload
+### I-003: Editable fields never reached the payload
+- Status: resolved, 2026-10-17.
+- Original impact: imported form edits left generatedData/JSON/publish unchanged (`script.js:208-254`).
+- Resolution: typed edit API, saved payload serialization and revision-checked approval.
+- Evidence: backend exact-title/price/description assertions and browser merchant edit → JSON → persisted approved receipt passed.
 
-- Status: resolved (replacement implementation)
-- Impact/severity: P2; users' title, category, description, and price corrections are ignored by downstream output.
-- First observed: 2026-10-17
-- Evidence: Complete a sample run, change the title and price fields, then inspect JSON or call publish. `script.js:208-230` writes form fields and `generatedData` once; there are no field listeners or serialization before `script.js:247-254`. A focused probe confirmed the original title and price remain in the generated object and publish alert.
-- Expected: Publishing/copying reflects the listing currently shown in the editable form.
-- Actual: JSON and the simulated publish action retain the original generated values.
-- Cause: Confirmed; the form and generated object are separate unsynchronized state.
-- Workaround: None through the current form; do not treat edited fields as saved output.
-- Next action: Use a single listing state or serialize/validate form values before generating JSON and publishing.
+### I-004: New input retained an old publishable listing
+- Status: resolved, 2026-10-17.
+- Original impact: imported setRawImage changed the preview without invalidating output (`script.js:66-91`).
+- Resolution: separate jobs and explicit new-listing/reset UI; old requests cannot replace the current view.
+- Evidence: distinct bottle/bag result tests and in-flight reset browser check passed.
 
-### I-004: Changing the input photo leaves the previous listing publishable
+### I-005: Invalid image decoding left processing stuck
+- Status: resolved, 2026-10-17.
+- Original impact: imported FileReader/Image promises had no validation/decode recovery (`script.js:66-140`).
+- Resolution: MIME/size/pixel/decode validation before job creation and recoverable failed stages.
+- Evidence: corrupt/non-image/oversized/multi-file rejection tests, failed-stage retry and browser invalid-file feedback passed.
 
-- Status: resolved (replacement implementation)
-- Impact/severity: P2; the visible new photo can be paired with the previous product's listing and price.
-- First observed: 2026-10-17
-- Evidence: Complete the shoe sample, then select a custom image. `script.js:66-91` updates input state and the preview but does not clear `generatedData`, metadata, JSON, processed output, or disable publishing. A focused probe confirmed the old shoe payload remains active and `publishBtn.disabled` stays false.
-- Expected: Replacing the input invalidates dependent results until a matching pipeline completes.
-- Actual: The page shows a new input alongside an actionable stale listing.
-- Cause: Confirmed; input changes do not invalidate derived state.
-- Workaround: Reset after processing has fully finished, then select the new photo and run again.
-- Next action: Clear or explicitly mark old results stale on input changes and disable publishing until a matching successful run.
+### I-006: Muted copy and inline link accessibility
+- Status: resolved, 2026-10-17.
+- Impact: axe measured mode-panel text at 4.44:1 and found a review settings link distinguished only by color.
+- Resolution: muted token darkened to #626158 (4.86:1 on that panel); in-text links persistently underlined.
+- Evidence: final WCAG A/AA axe scans on all seven routes and the ready review screen report zero violations. Focus/slider checks and 390px overflow assertions passed.
 
-### I-005: Invalid or failed image decoding leaves the pipeline stuck
+### I-007: Saving one language discarded edits in another
+- Status: resolved, 2026-10-17.
+- Impact: local language switching retained edits, but the first edit API sent only the active language, so saving could overwrite other unsaved locale work.
+- Resolution: validate and persist the complete edited translation set along with the active copy.
+- Evidence: backend English/Hindi edits saved while Marathi is active, and the mobile browser language-switch/save/preservation regression passed.
 
-- Status: resolved (replacement implementation)
-- Impact/severity: P2; an invalid/corrupt upload can block further processing until page reload.
-- First observed: 2026-10-17
-- Evidence: `handleFile` (`script.js:66-74`) accepts any dropped file with no MIME/decode validation. `generateStudioProcessedImage` (`script.js:94-140`) only resolves on `img.onload`, with no `onerror`/rejection path. The processing handler (`script.js:144-237`) has no error/finally recovery. A non-image FileReader result and failed Image decode were simulated in a focused probe; the promise remained unresolved and processing stayed true with the button disabled.
-- Expected: Reject invalid input with a clear error and restore the ability to run a valid image.
-- Actual: Loader and processing state remain active indefinitely.
-- Cause: Confirmed missing decode failure and cleanup paths; actual browser decode UI was not tested.
-- Workaround: Reload the page and choose a valid image; Reset alone does not reliably recover (I-002).
-- Next action: Validate supported inputs, handle reader/decode/canvas errors, and restore processing state in a final cleanup path.
+### I-008: Fractional INR rounded in the store preview
+- Status: resolved, 2026-10-17.
+- Impact: the original formatter used zero fractional digits, so a final price of 875.50 could display as 876 while the payload retained 875.50.
+- Resolution: retain two decimal places for fractional values, while whole INR amounts stay compact.
+- Evidence: final browser flow checks ₹875.50 in the preview, 875.50 in the store JSON and numeric 875.5 in the saved receipt.
 
-## Validation limits
+## Remaining limitations and verification boundaries
 
-- The imported repository has no automated test suite or package/build configuration.
-- `node --check script.js` succeeded. Ad hoc Node VM probes exercised the actual script with minimal DOM, image, and timer substitutes; no test source was added to the repository.
-- Browser access to the temporary loopback preview timed out. Rendering, responsive layout, real image decoding, remote sample image content/availability, clipboard behavior, and accessibility remain unverified.
-- I-001 is an observed implementation limitation; whether a simulation is acceptable is an unresolved scope question rather than a proven violation of a separate product spec.
-
-## Resolved issues
-
-None; no fixes were requested or applied.
-
-## Replacement verification (2026-10-17)
-
-The original three-file implementation was replaced in M1–M3. Historical evidence above refers to imported commit 70eab0c.
-
-- I-001: Resolved by real backend adapter contracts plus visible demo fallback provenance and explicit local-vs-live store results. backend/app/adapters.py, pipeline.py, frontend/components/Studio.tsx. Backend 23-test suite + core Playwright flow passed; authenticated provider availability remains unverified without keys.
-- I-002: Resolved by cancellation guards and per-run UI identity/disposed-stream checks. Backend cancellation and recovery tests passed; cancelled runs cannot save a late result.
-- I-003: Resolved by saved edit API, generated payload from saved listing, approval revision check. Playwright changed title and price, checked exact JSON and persisted published result.
-- I-004: Resolved by isolated per-job results and explicit new-listing/reset flow. Backend test confirms distinct bottle/bag payloads; the previous job is never reused for a new photo.
-- I-005: Resolved by server MIME/size/decode validation before job creation, failed-stage cleanup and retry. Invalid/corrupt input and failed-stage recovery tests passed.
-
-## Current limitations
-
-- DEMO_MODE uses real local image compositing, illustrative multilingual copy and clearly labeled example prices. The edge-color heuristic is less accurate than SAM/rembg; complex/white backgrounds may remain.
-- Real APIs and real store writes require credentials, account access and public HTTPS media. Contract tests mock the network boundary; no external draft has been created.
-- Local shared-filesystem persistence is suited to a hackathon, not a multi-tenant production deployment.
+- Real cloud/model/search/store credentials were not supplied. HTTP contracts have tests and official source references, but account access, latency and quality need authenticated smoke tests.
+- Docker Desktop's Linux engine was unavailable. Compose syntax/configuration passed; no full container build or real Redis broker run was claimed. BackgroundTasks runs end to end; Redis fallback and fast-worker races are tested.
+- General demo uploads use an edge-color isolation heuristic and generic editable copy when live providers are unavailable. Complex backgrounds may remain. Bundled sample masks were prepared with actual CPU rembg and are explicitly precomputed demo data.
+- Search-snippet price relevance and generated product fidelity need merchant review. Core WooCommerce has no portable SEO-plugin schema; SEO fields are retained as metadata for later plugin mapping.
+- Store creates are not blindly retried. A request timeout may have made a partial draft; receipts retain known IDs or flag uncertainty. Local approved repeats do not create duplicates.
+- Persistence is a shared local filesystem for a trusted single-merchant hackathon. Multi-host/multi-tenant operation needs a shared database/object store and authentication. A process crash may require inspection of a stale write-lock file.
+- Physical mobile camera capture, a complete screen-reader audit and non-Chromium device coverage were not exercised. Automated AA checks do not replace those checks.
+- Starlette emits a TestClient/httpx deprecation warning; all 29 backend tests pass. Browser screenshot replacement retries transient Windows thumbnail/indexer locks without rerunning app actions.

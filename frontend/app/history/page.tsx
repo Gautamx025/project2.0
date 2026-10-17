@@ -1,10 +1,129 @@
-'use client';
-import Link from 'next/link';
-import {useState} from 'react';
-import {useLedger,statusLabel} from '@/lib/useLedger';
-import {money,seconds} from '@/lib/api';
-export default function History(){
-  const {jobs,loading,error,refresh}=useLedger();const [filter,setFilter]=useState('all');
-  const shown=jobs.filter(job=>filter==='all'||job.status===filter);
-  return <div className="page"><div className="page-heading"><div><p className="eyebrow">THE MERCHANT’S LEDGER / 03</p><h1>Every frame.<br/><em>All accounted for.</em></h1></div><div className="heading-note"><p>Your drafts, past runs and store receipts.<br/>Saved on this app’s server.</p><Link className="button ink" href="/create">Make a new listing ↗</Link></div></div><div className="ledger-toolbar"><p className="mono">{jobs.length.toString().padStart(2,'0')} RECORDS / LATEST 200</p><label>Show <select aria-label="Filter listing history" value={filter} onChange={event=>setFilter(event.target.value)}><option value="all">All listings</option><option value="ready">Drafts ready</option><option value="published">Drafts synced</option><option value="failed">Failed</option><option value="processing">Developing</option><option value="queued">Queued</option><option value="cancelled">Cancelled</option></select></label></div>{error&&<div className="message error" role="alert">{error}<button className="text-button" onClick={refresh}>Try again ↻</button></div>}{loading?<p className="message" role="status">Opening your ledger…</p>:shown.length===0?<div className="empty-panel"><span className="mono">— / NO ENTRIES</span><h2>A clean page.</h2><p>{jobs.length?'No listings match this view. Choose a different filter.':'Your first product draft belongs here. Take a photo, or start with one of our samples.'}</p><Link href="/create" className="button accent">Open the studio ↗</Link></div>:<div className="ledger-list">{shown.map((job,index)=><article className="ledger-row" key={job.id}><span className="row-number mono">{(index+1).toString().padStart(2,'0')}</span><img src={job.result?.variants[job.result.selected_style]||job.source_images[0]} alt={job.result?.copy.title||'Uploaded product'}/><div className="ledger-product"><span className="mono">{job.result?.sku||job.id.slice(0,8).toUpperCase()}</span><h2>{job.result?.copy.title||'Product in development'}</h2><p>{new Date(job.created_at*1000).toLocaleString('en-IN',{dateStyle:'medium',timeStyle:'short',timeZone:'Asia/Kolkata'})} IST{job.result?' · '+money(job.result.final_price):''}</p></div><div className="ledger-state"><span className={'status-tag '+job.status}>{statusLabel(job)}</span><small className="mono">{seconds(job.elapsed_ms)}{job.demo_data?' / DEMO DATA':''}</small></div><Link className="text-button" href={'/create?job='+job.id}>{job.status==='published'?'View receipt':job.status==='failed'?'Review & retry':'Review listing'} ↗</Link></article>)}</div>}</div>;
+"use client";
+import Link from "next/link";
+import { useState } from "react";
+import { useLedger, statusLabel } from "@/lib/useLedger";
+import { money, seconds } from "@/lib/api";
+export default function History() {
+  const { jobs, loading, error, refresh } = useLedger();
+  const [filter, setFilter] = useState("all");
+  const shown = jobs.filter((job) => filter === "all" || job.status === filter);
+  return (
+    <div className="page">
+      <div className="page-heading">
+        <div>
+          <p className="eyebrow">THE MERCHANT’S LEDGER / 03</p>
+          <h1>
+            Every frame.
+            <br />
+            <em>All accounted for.</em>
+          </h1>
+        </div>
+        <div className="heading-note">
+          <p>
+            Your drafts, past runs and store receipts.
+            <br />
+            Saved on this app’s server.
+          </p>
+          <Link className="button ink" href="/create">
+            Make a new listing ↗
+          </Link>
+        </div>
+      </div>
+      <div className="ledger-toolbar">
+        <p className="mono">
+          {jobs.length.toString().padStart(2, "0")} RECORDS / LATEST 200
+        </p>
+        <label>
+          Show{" "}
+          <select
+            aria-label="Filter listing history"
+            value={filter}
+            onChange={(event) => setFilter(event.target.value)}
+          >
+            <option value="all">All listings</option>
+            <option value="ready">Drafts ready</option>
+            <option value="published">Drafts synced</option>
+            <option value="failed">Failed</option>
+            <option value="processing">Developing</option>
+            <option value="queued">Queued</option>
+            <option value="cancelled">Cancelled</option>
+          </select>
+        </label>
+      </div>
+      {error && (
+        <div className="message error" role="alert">
+          {error}
+          <button className="text-button" onClick={refresh}>
+            Try again ↻
+          </button>
+        </div>
+      )}
+      {loading ? (
+        <p className="message" role="status">
+          Opening your ledger…
+        </p>
+      ) : shown.length === 0 ? (
+        <div className="empty-panel">
+          <span className="mono">— / NO ENTRIES</span>
+          <h2>A clean page.</h2>
+          <p>
+            {jobs.length
+              ? "No listings match this view. Choose a different filter."
+              : "Your first product draft belongs here. Take a photo, or start with one of our samples."}
+          </p>
+          <Link href="/create" className="button accent">
+            Open the studio ↗
+          </Link>
+        </div>
+      ) : (
+        <div className="ledger-list">
+          {shown.map((job, index) => (
+            <article className="ledger-row" key={job.id}>
+              <span className="row-number mono">
+                {(index + 1).toString().padStart(2, "0")}
+              </span>
+              <img
+                src={
+                  job.result?.variants[job.result.selected_style] ||
+                  job.source_images[0]
+                }
+                alt={job.result?.copy.title || "Uploaded product"}
+              />
+              <div className="ledger-product">
+                <span className="mono">
+                  {job.result?.sku || job.id.slice(0, 8).toUpperCase()}
+                </span>
+                <h2>{job.result?.copy.title || "Product in development"}</h2>
+                <p>
+                  {new Date(job.created_at * 1000).toLocaleString("en-IN", {
+                    dateStyle: "medium",
+                    timeStyle: "short",
+                    timeZone: "Asia/Kolkata",
+                  })}{" "}
+                  IST{job.result ? " · " + money(job.result.final_price) : ""}
+                </p>
+              </div>
+              <div className="ledger-state">
+                <span className={"status-tag " + job.status}>
+                  {statusLabel(job)}
+                </span>
+                <small className="mono">
+                  {seconds(job.elapsed_ms)}
+                  {job.demo_data ? " / DEMO DATA" : ""}
+                </small>
+              </div>
+              <Link className="text-button" href={"/create?job=" + job.id}>
+                {job.status === "published"
+                  ? "View receipt"
+                  : job.status === "failed"
+                    ? "Review & retry"
+                    : "Review listing"}{" "}
+                ↗
+              </Link>
+            </article>
+          ))}
+        </div>
+      )}
+    </div>
+  );
 }

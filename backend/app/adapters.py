@@ -19,6 +19,7 @@ from .demo import demo_prices, demo_vision
 from .imaging import compose_variant, demo_cutout
 from .models import Comparable, PriceRange, VisionOutput
 from .repository import Repository
+from .config import ROOT
 
 class SegmentationProvider(Protocol):
     async def live(self, source: Path, destination: Path) -> str: ...
@@ -118,9 +119,10 @@ async def execute(adapter: Any, config: Settings, *args, on_retry=None) -> Resul
     return Result(await adapter.fallback(*args), True, adapter.name, last_reason + ' Local demo fallback used.', config.attempts)
 
 class Segmentation:
-    def __init__(self, provider: str):
+    def __init__(self, provider: str, sample_key: str = 'custom'):
         self.name = provider + ' / foreground isolation'
         self.provider = provider
+        self.sample_key = sample_key
         self.available = bool(os.getenv('FAL_KEY')) if provider == 'fal' else bool(os.getenv('REPLICATE_API_TOKEN') and os.getenv('REPLICATE_SAM_VERSION')) if provider == 'replicate' else True
 
     async def live(self, source: Path, destination: Path) -> str:
@@ -131,7 +133,8 @@ class Segmentation:
                 raise ValueError('Install optional rembg requirements first.') from exc
             global _rembg_session
             if '_rembg_session' not in globals():
-                _rembg_session = await asyncio.to_thread(new_session)
+                os.environ.setdefault('U2NET_HOME', str(ROOT/'data'/'models'))
+                _rembg_session = await asyncio.to_thread(new_session, os.getenv('REMBG_MODEL', 'u2netp'))
             result = await asyncio.to_thread(remove, source.read_bytes(), session=_rembg_session)
             destination.write_bytes(result)
             return str(destination)
@@ -162,6 +165,11 @@ class Segmentation:
         return str(destination)
 
     async def fallback(self, source: Path, destination: Path) -> str:
+        precomputed = ROOT/'frontend'/'public'/'samples'/f'{self.sample_key}-cutout.png'
+        if self.sample_key in {'bottle', 'watch', 'bag'} and precomputed.exists():
+            import shutil
+            await asyncio.to_thread(shutil.copyfile, precomputed, destination)
+            return str(destination)
         # Prefer true local rembg if installed and the hosted path is unavailable.
         if self.provider != 'rembg' and os.getenv('DEMO_MODE', 'true').lower() != 'true':
             try:
@@ -207,11 +215,11 @@ class Vision:
         prompt = 'Write an accurate product listing from these photos. Do not invent brand, capacity, certification or performance claims. Mark uncertain material/specs as needing seller confirmation. Return strict JSON matching the schema. Currency is INR. Main fields in English, hindi and marathi fields translated faithfully. Use 3–6 tags and 3 bullet_points. Keep seo_description under 160 characters.'
         schema = VisionOutput.model_json_schema()
         if self.provider == 'gemini':
-            model = os.getenv('GEMINI_MODEL', 'gemini-3.8-flash')
-            parts = [{'text': prompt}] + [{'inline_data': {'mime_type': 'image/jpeg', 'data': base64.b64encode(path.read_bytes()).decode()}} for path in sources]
+            model = os.getenv('GEMINI_MODEL') or 'gemini-3.8-flash'
+            parts = [{'text': prompt}] + [{'inlineData': {'mimeType': 'image/jpeg', 'data': base64.b64encode(path.read_bytes()).decode()}} for path in sources]
             response = await client().post(f'https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent', headers={'x-goog-api-key': os.getenv('GEMINI_API_KEY', '')}, json={'contents': [{'parts': parts}], 'generationConfig': {'responseFormat': {'text': {'mimeType': 'application/json', 'schema': schema}}, 'temperature': .2}})
             response.raise_for_status()
-            text = response.json()['candidates'][0]['content']['parts'][0]['text']
+            text = ''.join(part.get('text', '') for part in response.json()['candidates'][0]['content']['parts'])
         else:
             response = await client().post('https://api.openai.com/v1/chat/completions', headers={'Authorization': f'Bearer {os.getenv("OPENAI_API_KEY")}'}, json={'model': os.getenv('OPENAI_MODEL', 'gpt-4o'), 'messages': [{'role': 'user', 'content': [{'type': 'text', 'text': prompt}] + [{'type': 'image_url', 'image_url': {'url': data_uri(path)}} for path in sources]}], 'response_format': {'type': 'json_schema', 'json_schema': {'name': 'product_listing', 'strict': True, 'schema': schema}}})
             response.raise_for_status()
@@ -275,7 +283,7 @@ def store_payload(listing: dict, channel: str, public_url: str) -> dict:
     image = public_url + listing['variants'][listing['selected_style']]
     if channel == 'shopify':
         return {'product': {'title': copy['title'], 'descriptionHtml': body, 'productType': listing['category'], 'tags': copy['tags'], 'status': 'DRAFT', 'seo': {'title': copy['seo_title'], 'description': copy['seo_description']}}, 'media': [{'originalSource': image, 'mediaContentType': 'IMAGE', 'alt': copy['title']}], 'variant': {'price': f'{listing["final_price"]:.2f}', 'inventoryItem': {'sku': listing['sku']}}}
-    return {'name': copy['title'], 'type': 'simple', 'status': 'draft', 'sku': listing['sku'], 'regular_price': f'{listing["final_price"]:.2f}', 'description': body, 'short_description': html.escape(copy['seo_description']), 'tags': [{'name': tag} for tag in copy['tags']], 'images': [{'src': image, 'alt': copy['title']}]}
+    return {'name': copy['title'], 'type': 'simple', 'status': 'draft', 'sku': listing['sku'], 'regular_price': f'{listing["final_price"]:.2f}', 'description': body, 'short_description': html.escape(copy['seo_description']), 'images': [{'src': image, 'alt': copy['title']}], 'attributes': [{'name': 'Material', 'visible': True, 'options': [listing['material']]}, {'name': 'Color', 'visible': True, 'options': [listing['color']]}], 'meta_data': [{'key': '_snap2store_seo_title', 'value': copy['seo_title']}, {'key': '_snap2store_seo_description', 'value': copy['seo_description']}, {'key': '_snap2store_keywords', 'value': ', '.join(copy['tags'])}, {'key': '_snap2store_category', 'value': listing['category']}]}
 
 def shopify_url() -> str:
     domain = os.getenv('SHOPIFY_DOMAIN', '').lower().removeprefix('https://').rstrip('/')
@@ -354,7 +362,20 @@ class Store:
             except (httpx.HTTPError, KeyError, ValueError):
                 result.update(price_synced=False, message='Draft created, but price/SKU update failed. Open this draft and correct it; do not create another.')
             return result
-        response = await client().post(woo_url()+'/products', auth=(os.getenv('WOOCOMMERCE_KEY', ''), os.getenv('WOOCOMMERCE_SECRET', '')), json=payload)
+        auth = (os.getenv('WOOCOMMERCE_KEY', ''), os.getenv('WOOCOMMERCE_SECRET', ''))
+        # Woo product taxonomy accepts IDs, not names. Resolve/create only after approval.
+        tag_ids = []
+        for tag in dict.fromkeys(listing['copy']['tags']):
+            response = await client().get(woo_url()+'/products/tags', auth=auth, params={'search': tag, 'per_page': 100})
+            response.raise_for_status()
+            existing = next((term for term in response.json() if html.unescape(term['name']).casefold() == tag.casefold()), None)
+            if existing is None:
+                response = await client().post(woo_url()+'/products/tags', auth=auth, json={'name': tag})
+                response.raise_for_status()
+                existing = response.json()
+            tag_ids.append({'id': existing['id']})
+        payload['tags'] = tag_ids
+        response = await client().post(woo_url()+'/products', auth=auth, json=payload)
         response.raise_for_status()
         product = response.json()
         if product.get('status') != 'draft':
@@ -362,4 +383,4 @@ class Store:
         return {'id': str(product['id']), 'url': os.getenv('WOOCOMMERCE_URL', '').rstrip('/')+'/wp-admin/post.php?post='+str(product['id'])+'&action=edit', 'channel': channel, 'demo': False, 'status': 'draft', 'price_synced': True, 'message': 'A draft was created in WooCommerce. It is not visible to shoppers.'}
 
     def demo(self, listing: dict, channel: str, reason: str) -> dict:
-        return {'id': 'DEMO-'+listing['sku'], 'url': '/history?draft='+listing['id'], 'channel': channel, 'demo': True, 'status': 'draft', 'price_synced': True, 'message': reason+' Demo draft saved locally; no live store operation was attempted.'}
+        return {'id': 'DEMO-'+listing['sku'], 'url': '/create?job='+listing['id'], 'channel': channel, 'demo': True, 'status': 'draft', 'price_synced': True, 'message': reason+' Demo draft saved locally; no live store operation was attempted.'}

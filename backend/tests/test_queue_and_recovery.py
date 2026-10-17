@@ -47,3 +47,19 @@ def test_failed_stage_can_recover_through_retry(api, monkeypatch):
     recovered = api.get(endpoint).json()
     assert recovered['status'] == 'ready'
     assert recovered['result']['copy']['title'] == 'Everyday brown backpack'
+
+def test_restart_recovers_local_jobs_without_interrupting_redis_workers(isolated_environment):
+    from fastapi.testclient import TestClient
+    local=pipeline.new_job([], 'bottle', 'studio', 'en')
+    local['status']='processing'
+    local['stages'][0]['status']='running'
+    isolated_environment.save(local)
+    remote=pipeline.new_job([], 'bag', 'studio', 'en')
+    remote.update(status='processing',queue='redis')
+    isolated_environment.save(remote)
+    with TestClient(main.app):
+        recovered=isolated_environment.get(local['id'])
+        assert recovered['status']=='failed'
+        assert recovered['stages'][0]['status']=='failed'
+        assert 'restarted' in recovered['error']
+        assert isolated_environment.get(remote['id'])['status']=='processing'

@@ -40,6 +40,7 @@ def public_settings() -> dict:
     return {**{name: os.getenv(name.upper(), '') for name in PUBLIC_FIELDS},
             'demo_mode': config.demo, 'vision_provider': config.vision, 'price_provider': config.price,
             'segmentation_provider': config.segmentation, 'background_provider': config.background,
+            'gemini_model': os.getenv('GEMINI_MODEL') or 'gemini-3.8-flash',
             'configured': {name: bool(os.getenv(name.upper())) for name in SECRET_FIELDS}}
 
 def save_settings(values: dict) -> dict:

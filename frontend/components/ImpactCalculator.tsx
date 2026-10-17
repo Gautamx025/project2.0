@@ -1,14 +1,171 @@
-'use client';
-import {useEffect,useState} from 'react';
-import {api,Job,money} from '@/lib/api';
-export default function ImpactCalculator({compact=false}:{compact?:boolean}){
-  const [products,setProducts]=useState(100),[cost,setCost]=useState(300),[costMode,setCostMode]=useState('hour'),[baseline,setBaseline]=useState(30),[jobs,setJobs]=useState<Job[]>([]),[loading,setLoading]=useState(true),[error,setError]=useState('');
-  async function load(){setLoading(true);try{setJobs((await api<Job[]>('/jobs')).filter(job=>job.result&&job.elapsed_ms>0));setError('');}catch{setError('Couldn’t load measured runs. Start the backend or try again.');}finally{setLoading(false);}}
-  useEffect(()=>{load();},[]);
-  const measured=jobs.length?jobs.reduce((total,job)=>total+job.elapsed_ms/1000,0)/jobs.length:null;
-  const beforeHours=products*baseline/60,afterHours=measured===null?null:products*measured/3600;
-  const hoursSaved=afterHours===null?null:Math.max(0,beforeHours-afterHours);
-  const beforeCost=costMode==='hour'?beforeHours*cost:products*cost;
-  const costSaved=hoursSaved===null?null:costMode==='hour'?hoursSaved*cost:beforeCost*(hoursSaved/Math.max(beforeHours,.001));
-  return <section className={'calculator '+(compact?'compact':'')}><div className="calculator-intro"><p className="eyebrow">THE AFTERNOON YOU GET BACK</p><h2>Do the math<br/><em>for your shop.</em></h2><p>Compare the 25–40 minute manual baseline with your measured processing time. Review, store-sync time and provider fees are additional.</p><span className="badge">{jobs.length?`${jobs.length} MEASURED RUNS / ${jobs.some(job=>job.demo_data)?'INCLUDES DEMO':'PROVIDER DATA'}`:'NO MEASURED RUNS YET'}</span></div><div className="calculator-work"><div className="calculator-inputs"><div><label htmlFor="monthly-products">Products per month</label><input id="monthly-products" type="number" min="1" max="100000" value={products} onChange={event=>setProducts(Math.min(100000,Math.max(1,Number(event.target.value))))}/></div><div><label htmlFor="manual-baseline">Manual minutes / product</label><input id="manual-baseline" type="number" min="25" max="40" value={baseline} onChange={event=>setBaseline(Math.min(40,Math.max(25,Number(event.target.value))))}/></div><div><label htmlFor="cost-mode">Your cost basis</label><select id="cost-mode" value={costMode} onChange={event=>setCostMode(event.target.value)}><option value="hour">INR per hour</option><option value="photo">INR per product photo</option></select></div><div><label htmlFor="merchant-cost">{costMode==='hour'?'Cost per hour (₹)':'Cost per photo (₹)'}</label><input id="merchant-cost" type="number" min="0" max="1000000" value={cost} onChange={event=>setCost(Math.min(1000000,Math.max(0,Number(event.target.value))))}/></div></div>{loading?<p className="message" role="status">Reading your measured runs…</p>:error?<div className="message error" role="alert">{error}<button className="text-button" onClick={load}>Try again ↻</button></div>:measured===null?<div className="message">Run a sample in the studio to calculate savings from a real measured time. No placeholder speed is used.</div>:<><div className="impact-results" aria-live="polite"><div><span className="mono">TIME RETURNED / MONTH</span><strong data-testid="hours-saved">{hoursSaved!.toFixed(1)} <small>hours</small></strong></div><div><span className="mono">MODELED LABOR SAVINGS</span><strong data-testid="money-saved">{money(costSaved!)}</strong></div></div><p className="caption">{baseline} min manual → {measured.toFixed(2)} s average measured processing. Baseline cost {money(beforeCost)}/month. Per-photo savings are proportional to time saved. Estimates exclude API charges, hosting, manual review and store fees; demo timing does not predict live-model speed.</p></>}</div></section>;
+"use client";
+import { useEffect, useState } from "react";
+import { api, Job, money } from "@/lib/api";
+export default function ImpactCalculator({
+  compact = false,
+}: {
+  compact?: boolean;
+}) {
+  const [products, setProducts] = useState(100),
+    [cost, setCost] = useState(300),
+    [costMode, setCostMode] = useState("hour"),
+    [baseline, setBaseline] = useState(30),
+    [jobs, setJobs] = useState<Job[]>([]),
+    [loading, setLoading] = useState(true),
+    [error, setError] = useState("");
+  async function load() {
+    setLoading(true);
+    try {
+      setJobs(
+        (await api<Job[]>("/jobs")).filter(
+          (job) => job.result && job.elapsed_ms > 0,
+        ),
+      );
+      setError("");
+    } catch {
+      setError("Couldn’t load measured runs. Start the backend or try again.");
+    } finally {
+      setLoading(false);
+    }
+  }
+  useEffect(() => {
+    load();
+  }, []);
+  const measured = jobs.length
+    ? jobs.reduce((total, job) => total + job.elapsed_ms / 1000, 0) /
+      jobs.length
+    : null;
+  const beforeHours = (products * baseline) / 60,
+    afterHours = measured === null ? null : (products * measured) / 3600;
+  const hoursSaved =
+    afterHours === null ? null : Math.max(0, beforeHours - afterHours);
+  const beforeCost = costMode === "hour" ? beforeHours * cost : products * cost;
+  const costSaved =
+    hoursSaved === null
+      ? null
+      : costMode === "hour"
+        ? hoursSaved * cost
+        : beforeCost * (hoursSaved / Math.max(beforeHours, 0.001));
+  return (
+    <section className={"calculator " + (compact ? "compact" : "")}>
+      <div className="calculator-intro">
+        <p className="eyebrow">THE AFTERNOON YOU GET BACK</p>
+        <h2>
+          Do the math
+          <br />
+          <em>for your shop.</em>
+        </h2>
+        <p>
+          Compare the 25–40 minute manual baseline with your measured processing
+          time. Review, store-sync time and provider fees are additional.
+        </p>
+        <span className="badge">
+          {jobs.length
+            ? `${jobs.length} MEASURED RUNS / ${jobs.some((job) => job.demo_data) ? "INCLUDES DEMO" : "PROVIDER DATA"}`
+            : "NO MEASURED RUNS YET"}
+        </span>
+      </div>
+      <div className="calculator-work">
+        <div className="calculator-inputs">
+          <div>
+            <label htmlFor="monthly-products">Products per month</label>
+            <input
+              id="monthly-products"
+              type="number"
+              min="1"
+              max="100000"
+              value={products}
+              onChange={(event) =>
+                setProducts(
+                  Math.min(100000, Math.max(1, Number(event.target.value))),
+                )
+              }
+            />
+          </div>
+          <div>
+            <label htmlFor="manual-baseline">Manual minutes / product</label>
+            <input
+              id="manual-baseline"
+              type="number"
+              min="25"
+              max="40"
+              value={baseline}
+              onChange={(event) =>
+                setBaseline(
+                  Math.min(40, Math.max(25, Number(event.target.value))),
+                )
+              }
+            />
+          </div>
+          <div>
+            <label htmlFor="cost-mode">Your cost basis</label>
+            <select
+              id="cost-mode"
+              value={costMode}
+              onChange={(event) => setCostMode(event.target.value)}
+            >
+              <option value="hour">INR per hour</option>
+              <option value="photo">INR per product photo</option>
+            </select>
+          </div>
+          <div>
+            <label htmlFor="merchant-cost">
+              {costMode === "hour" ? "Cost per hour (₹)" : "Cost per photo (₹)"}
+            </label>
+            <input
+              id="merchant-cost"
+              type="number"
+              min="0"
+              max="1000000"
+              value={cost}
+              onChange={(event) =>
+                setCost(
+                  Math.min(1000000, Math.max(0, Number(event.target.value))),
+                )
+              }
+            />
+          </div>
+        </div>
+        {loading ? (
+          <p className="message" role="status">
+            Reading your measured runs…
+          </p>
+        ) : error ? (
+          <div className="message error" role="alert">
+            {error}
+            <button className="text-button" onClick={load}>
+              Try again ↻
+            </button>
+          </div>
+        ) : measured === null ? (
+          <div className="message">
+            Run a sample in the studio to calculate savings from a real measured
+            time. No placeholder speed is used.
+          </div>
+        ) : (
+          <>
+            <div className="impact-results" aria-live="polite">
+              <div>
+                <span className="mono">TIME RETURNED / MONTH</span>
+                <strong data-testid="hours-saved">
+                  {hoursSaved!.toFixed(1)} <small>hours</small>
+                </strong>
+              </div>
+              <div>
+                <span className="mono">MODELED LABOR SAVINGS</span>
+                <strong data-testid="money-saved">{money(costSaved!)}</strong>
+              </div>
+            </div>
+            <p className="caption">
+              {baseline} min manual → {measured.toFixed(2)} s average measured
+              processing. Baseline cost {money(beforeCost)}/month. Per-photo
+              savings are proportional to time saved. Estimates exclude API
+              charges, hosting, manual review and store fees; demo timing does
+              not predict live-model speed.
+            </p>
+          </>
+        )}
+      </div>
+    </section>
+  );
 }

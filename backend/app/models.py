@@ -1,12 +1,12 @@
 from typing import Literal
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 Language = Literal['en', 'hi', 'mr']
 Style = Literal['studio', 'shadow', 'lifestyle', 'color']
 StageKey = Literal['ingestion', 'isolation', 'background', 'metadata', 'pricing', 'draft']
 
 class StrictModel(BaseModel):
-    model_config = ConfigDict(extra='forbid')
+    model_config = ConfigDict(extra='forbid', allow_inf_nan=False)
 
 class ListingCopy(StrictModel):
     title: str = Field(min_length=3, max_length=160)
@@ -38,6 +38,12 @@ class PriceRange(StrictModel):
     sources: list[Comparable]
     cached: bool = False
 
+    @model_validator(mode='after')
+    def ordered(self):
+        if not self.low <= self.median <= self.high:
+            raise ValueError('Price range must have low <= median <= high.')
+        return self
+
 class SampleRequest(StrictModel):
     sample: Literal['bottle', 'watch', 'bag'] = 'bottle'
     style: Style = 'studio'
@@ -45,6 +51,7 @@ class SampleRequest(StrictModel):
 
 class EditRequest(StrictModel):
     listing_copy: ListingCopy = Field(alias='copy')
+    translations: dict[Language, ListingCopy] | None = None
     final_price: float = Field(gt=0, le=10_000_000)
     language: Language = 'en'
     selected_style: Style = 'studio'

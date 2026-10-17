@@ -57,3 +57,13 @@ No superseded decisions recorded. Existing technology choices are observed imple
 - Reason: Offline input assets and a clear merchant approval boundary.
 - Alternatives: Runtime hotlinks break offline demos; publishing in the automatic pipeline violates the approval requirement.
 - Consequences: Sample metadata/prices remain illustrative and visibly labeled; processed images are local demo composites when providers are unavailable.
+
+### D-006: Precomputed offline masks and isolated final QA
+
+- Date: 2026-10-17
+- Status: accepted
+- Source: Agent implementation choices within the user's requirement for realistic offline results and autonomous verification.
+- Decision: Bundle rembg/u2netp-derived alpha cutouts for the three licensed sample photos; recognize exact sample uploads by content hash. General demo uploads retain the explicit heuristic fallback. Include CPU rembg for live local fallback, warming its model separately. Force Playwright demo mode with separate data and environment files and use production-server QA for final screenshots.
+- Reason: Improves sample foreground quality without runtime Internet, avoids pretending fixture recognition is vision, and prevents tests from touching saved credentials or live stores.
+- Alternatives: Runtime model downloads would break an offline stage demo; approximate masks on all samples visibly retained backgrounds.
+- Consequences: Precomputed results are always labeled demo; live-provider account verification remains separate. Model weights stay ignored under data/. Original photo and derivative provenance is in docs/sample-provenance.md.

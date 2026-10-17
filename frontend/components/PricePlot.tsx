@@ -1,6 +1,61 @@
-import {Listing,money} from '@/lib/api';
-export default function PricePlot({price}:{price:Listing['price']}) {
-  const span = price.high-price.low || 1;
-  const position = (value:number) => 5+90*(value-price.low)/span;
-  return <div className="price-research"><div className="range-numbers"><div><span className="mono">LOW</span><strong>{money(price.low)}</strong></div><div><span className="mono">MEDIAN</span><strong>{money(price.median)}</strong></div><div><span className="mono">HIGH</span><strong>{money(price.high)}</strong></div></div><div className="price-track" role="img" aria-label={`Comparable prices range from ${money(price.low)} to ${money(price.high)}, median ${money(price.median)}`}><span className="median-mark" style={{left:position(price.median)+'%'}}/>{price.sources.map((source,index)=><span className="price-tick" style={{left:position(source.price)+'%'}} title={`${source.title}: ${money(source.price)}`} key={index}/>)}</div><ul className="comparables">{price.sources.map((source,index)=><li key={index}><span className="mono">0{index+1}</span>{source.url?<a href={source.url} target="_blank" rel="noreferrer">{source.title} ↗</a>:<span>{source.title}</span>}<strong>{money(source.price)}</strong></li>)}</ul>{price.cached&&<p className="caption">Cached marketplace search · reuses a recent lookup.</p>}</div>;
+import { Listing, money } from "@/lib/api";
+export default function PricePlot({ price }: { price: Listing["price"] }) {
+  const span = price.high - price.low || 1;
+  const position = (value: number) => 5 + (90 * (value - price.low)) / span;
+  return (
+    <div className="price-research">
+      <div className="range-numbers">
+        <div>
+          <span className="mono">LOW</span>
+          <strong>{money(price.low)}</strong>
+        </div>
+        <div>
+          <span className="mono">MEDIAN</span>
+          <strong>{money(price.median)}</strong>
+        </div>
+        <div>
+          <span className="mono">HIGH</span>
+          <strong>{money(price.high)}</strong>
+        </div>
+      </div>
+      <div
+        className="price-track"
+        role="img"
+        aria-label={`Comparable prices range from ${money(price.low)} to ${money(price.high)}, median ${money(price.median)}`}
+      >
+        <span
+          className="median-mark"
+          style={{ left: position(price.median) + "%" }}
+        />
+        {price.sources.map((source, index) => (
+          <span
+            className="price-tick"
+            style={{ left: position(source.price) + "%" }}
+            title={`${source.title}: ${money(source.price)}`}
+            key={index}
+          />
+        ))}
+      </div>
+      <ul className="comparables">
+        {price.sources.map((source, index) => (
+          <li key={index}>
+            <span className="mono">0{index + 1}</span>
+            {source.url ? (
+              <a href={source.url} target="_blank" rel="noreferrer">
+                {source.title} ↗
+              </a>
+            ) : (
+              <span>{source.title}</span>
+            )}
+            <strong>{money(source.price)}</strong>
+          </li>
+        ))}
+      </ul>
+      {price.cached && (
+        <p className="caption">
+          Cached marketplace search · reuses a recent lookup.
+        </p>
+      )}
+    </div>
+  );
 }

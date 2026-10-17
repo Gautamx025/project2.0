@@ -98,13 +98,16 @@ async def test_woocommerce_contract_posts_only_draft(ready, monkeypatch):
     calls = []
     async def handler(request):
         calls.append(request)
+        if request.url.path.endswith('/products/tags'):
+            return httpx.Response(200, json=[{'id': 42, 'name': request.url.params['search']}])
         if request.method == 'GET':
             return httpx.Response(200, json={'value': 'INR'})
         body = json.loads(request.content)
         assert body['status'] == 'draft' and body['regular_price'] == '749.00'
+        assert body['tags'] == [{'id': 42}, {'id': 42}, {'id': 42}]
         assert request.headers['Authorization'].startswith('Basic ')
         return httpx.Response(201, json={'id': 77, 'status': 'draft'})
     async with httpx.AsyncClient(transport=httpx.MockTransport(handler)) as http:
         monkeypatch.setattr(adapters, 'client', lambda: http)
         result = await Store(config.settings()).publish(ready['result'], 'woocommerce')
-    assert not result['demo'] and result['id'] == '77' and len(calls) == 2
+    assert not result['demo'] and result['id'] == '77' and len(calls) == 5

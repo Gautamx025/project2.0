@@ -6,7 +6,7 @@ services:
     environment:
       BACKEND_URL: http://backend:8000
       NEXT_TELEMETRY_DISABLED: '1'
-    ports: ['3000:3000']
+    ports: ['127.0.0.1:3000:3000']
     depends_on: [backend]
   backend:
     build:
@@ -17,7 +17,7 @@ services:
       REDIS_URL: redis://redis:6379/0
       PUBLIC_BASE_URL: http://localhost:3000
       SETTINGS_ENV_FILE: /app/data/config/.env
-    ports: ['8000:8000']
+    ports: ['127.0.0.1:8000:8000']
     volumes: [snap-data:/app/data]
     depends_on: [redis]
   worker:
@@ -33,6 +33,9 @@ services:
     depends_on: [redis]
   redis:
     image: redis:7-alpine
+    command: redis-server --appendonly yes
     ports: ['127.0.0.1:6379:6379']
+    volumes: [redis-data:/data]
 volumes:
   snap-data:
+  redis-data:
